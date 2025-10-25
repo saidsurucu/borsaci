@@ -12,6 +12,7 @@ from prompt_toolkit.styles import Style
 from .agent import BorsaAgent
 from .utils.ui import print_banner, print_goodbye, print_help, print_error_banner
 from .utils.logger import Logger
+from .utils.loading import run_with_loading_and_cancel
 from .updater import check_and_auto_update
 
 
@@ -247,8 +248,10 @@ async def async_main():
                         print(f"[DEBUG] Calling agent.run() with query: {query[:50]}...")
                         print(f"[DEBUG] Conversation history has {len(conversation_history)} messages")
 
-                    # Run agent with conversation history
-                    answer, messages = await agent.run(query, message_history=conversation_history)
+                    # Run agent with conversation history + loading animation + ESC cancel
+                    answer, messages = await run_with_loading_and_cancel(
+                        agent.run(query, message_history=conversation_history)
+                    )
 
                     # Update conversation history for next query
                     conversation_history = messages
@@ -258,6 +261,10 @@ async def async_main():
                         print(f"[DEBUG] Updated history now has {len(conversation_history)} messages")
 
                     logger.log_summary(answer)
+
+                except asyncio.CancelledError:
+                    logger.log_warning("⚠️  İşlem iptal edildi (ESC)")
+                    continue
 
                 except KeyboardInterrupt:
                     logger.log_warning("Sorgu iptal edildi")
