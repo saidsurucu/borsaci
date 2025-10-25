@@ -12,6 +12,7 @@ from prompt_toolkit.styles import Style
 from .agent import BorsaAgent
 from .utils.ui import print_banner, print_goodbye, print_help, print_error_banner
 from .utils.logger import Logger
+from .updater import check_and_auto_update
 
 
 # Custom prompt style
@@ -153,6 +154,12 @@ async def check_and_setup_openrouter_key(logger: Logger) -> bool:
 
 async def async_main():
     """Async main function for CLI"""
+    # Check for updates and auto-update if available
+    # (will restart program if update found)
+    skip_update = "--skip-update" in sys.argv
+    debug = "--debug" in sys.argv
+    check_and_auto_update(skip_update=skip_update, debug=debug)
+
     # Print welcome banner
     print_banner()
 
@@ -294,9 +301,10 @@ def main():
 BorsaCI - Türk Finans Piyasaları için AI Agent
 
 Kullanım:
-    borsaci              Interactive mode başlat
-    borsaci --debug      Debug çıktısı ile başlat
-    borsaci --help       Bu yardım mesajını göster
+    borsaci                  Interactive mode başlat
+    borsaci --debug          Debug çıktısı ile başlat
+    borsaci --skip-update    Otomatik güncellemeyi atla
+    borsaci --help           Bu yardım mesajını göster
 
 Ortam Değişkenleri:
     OPENROUTER_API_KEY   OpenRouter API key (zorunlu)

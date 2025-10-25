@@ -4,6 +4,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+from rich.markdown import Markdown
 from typing import Optional
 
 
@@ -65,16 +66,13 @@ class Logger:
         )
 
     def log_summary(self, answer: str):
-        """Log final answer in a panel"""
+        """Log final answer with markdown rendering"""
         self.console.print()
-        self.console.print(
-            Panel(
-                answer,
-                title="[bold]📊 Sonuç[/bold]",
-                border_style="green",
-                padding=(1, 2),
-            )
-        )
+        self.console.print("[bold green]📊 Sonuç[/bold green]")
+        self.console.print()
+        # Render markdown for better formatting (bold, lists, tables, etc.)
+        self.console.print(Markdown(answer))
+        self.console.print()
 
     def log_error(self, error: str):
         """Log error message"""
