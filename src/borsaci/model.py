@@ -10,9 +10,9 @@ def get_planning_model() -> str:
     Get OpenRouter model for Planning Agent.
 
     Returns:
-        GLM-4.6:exacto - Strong reasoning for task decomposition
+        Gemini 2.5 Pro - Strong reasoning for task decomposition
     """
-    return "openrouter:z-ai/glm-4.6:exacto"
+    return "openrouter:google/gemini-2.5-pro"
 
 
 def get_action_model() -> str:
@@ -20,9 +20,9 @@ def get_action_model() -> str:
     Get OpenRouter model for Action Agent.
 
     Returns:
-        MiniMax-M2:free - Optimized for tool calling, free tier
+        Gemini 2.5 Flash - Optimized for tool calling
     """
-    return "openrouter:minimax/minimax-m2:free"
+    return "openrouter:google/gemini-2.5-flash-preview-09-2025"
 
 
 def get_validation_model() -> str:
@@ -30,9 +30,9 @@ def get_validation_model() -> str:
     Get OpenRouter model for Validation Agent.
 
     Returns:
-        MiniMax-M2:free - Simple validation tasks, free tier
+        Gemini 2.5 Flash - Simple validation tasks
     """
-    return "openrouter:minimax/minimax-m2:free"
+    return "openrouter:google/gemini-2.5-flash-preview-09-2025"
 
 
 def get_answer_model() -> str:
@@ -90,7 +90,7 @@ def create_planning_agent(output_type: type, system_prompt: str) -> Agent:
     """
     Create planning agent for task decomposition.
 
-    Uses GLM-4.6:exacto for strong reasoning capabilities.
+    Uses Gemini 2.5 Pro for strong reasoning capabilities.
 
     Args:
         output_type: Pydantic model for task list output
@@ -115,7 +115,7 @@ def create_action_agent(
     """
     Create action agent with MCP tool access.
 
-    Uses MiniMax-M2:free optimized for tool calling (free tier).
+    Uses Gemini 2.5 Flash optimized for tool calling.
 
     Args:
         system_prompt: System prompt for tool selection
@@ -140,7 +140,7 @@ def create_validation_agent(output_type: type, system_prompt: str) -> Agent:
     """
     Create validation agent for task completion checking.
 
-    Uses MiniMax-M2:free for simple validation tasks (free tier).
+    Uses Gemini 2.5 Flash for simple validation tasks.
 
     Args:
         output_type: Pydantic model for validation result (IsDone)

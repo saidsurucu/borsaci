@@ -44,7 +44,7 @@ Türk ve global piyasalara dair sorularınızı yanıtlar.
   >> Çıkmak için: exit, quit, çık
 
 [dim]Models: Multi-Agent Setup via OpenRouter[/dim]
-[dim]  Planning: GLM-4.6 | Action: MiniMax-M2 | Answer: Gemini 2.5 Flash[/dim]
+[dim]  Planning: Gemini 2.5 Pro | Others: Gemini 2.5 Flash[/dim]
 """
 
     console.print(banner_text, style="bold green")
