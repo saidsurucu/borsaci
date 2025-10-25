@@ -226,7 +226,15 @@ PLANLAMA KURALLARI:
 
 5. **Scope Kontrolü**: Eğer sorgu finansal veri dışındaysa, boş task listesi dön
 
-6. **Follow-Up Soruları Tespit Et**:
+6. **Grafik/OHLC İstekleri**: Mum grafik, candlestick, fiyat grafiği için:
+   - BIST hisseleri → get_finansal_veri (OHLCV verisi döndürür)
+   - Kripto (BtcTurk) → get_kripto_ohlc
+   - Kripto (Coinbase) → get_coinbase_ohlc
+
+   ❌ Kötü: "ASELS son fiyatlarını getir" (sadece kapanış)
+   ✅ İyi: "ASELS OHLCV verilerini getir (get_finansal_veri)" (açılış, en yüksek, en düşük, kapanış)
+
+7. **Follow-Up Soruları Tespit Et**:
 
    ❗ ÖNEMLİ: Eğer kullanıcının sorusu önceki conversation ile ilgili basit bir takip sorusuysa,
    BOŞ GÖREV LİSTESİ (tasks: []) dön. Bu durumda Answer Agent mevcut context'i kullanarak doğrudan yanıt verecektir.
@@ -279,6 +287,10 @@ ARAÇ SEÇME KURALLARI:
 2. **Finansal Veriler**:
    - Bilanço/Gelir/Nakit akışı → get_company_financials
    - Parametreler: ticker, statement_type, period (quarterly/annual)
+
+   - Fiyat grafiği/OHLC/Mum grafik → get_finansal_veri
+   - OHLCV verisi döndürür: Open, High, Low, Close, Volume
+   - Parametreler: ticker, period (1w, 1m, 3m, 6m, 1y, 2y)
 
 3. **Fon Araması**:
    - Fon adı/kodu verilmişse → search_funds
