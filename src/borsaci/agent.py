@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import datetime
 import os
 
+from pydantic_ai import Agent
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart
 from pydantic_ai.usage import RunUsage
 
@@ -11,8 +12,8 @@ from .model import (
     create_planning_agent,
     create_action_agent,
     create_validation_agent,
-    create_answer_agent,
     create_base_agent,
+    get_answer_model,
 )
 from .schemas import TaskList, IsDone, Answer, Task, BaseResponse
 from .prompts import (
@@ -23,6 +24,12 @@ from .prompts import (
     get_answer_prompt,
 )
 from .mcp_tools import BorsaMCP, get_mcp_client
+from .utils.charts import (
+    create_candlestick_chart,
+    create_comparison_bar_chart,
+    create_multi_line_chart,
+    create_histogram,
+)
 
 
 class BorsaAgent:
@@ -88,9 +95,18 @@ class BorsaAgent:
             system_prompt=VALIDATION_PROMPT,
         )
 
-        self.answerer = create_answer_agent(
-            output_type=Answer,
+        # Create answer agent with chart tools
+        self.answerer = Agent(
+            model=get_answer_model(),
             system_prompt=get_answer_prompt(),
+            output_type=Answer,
+            tools=[
+                create_candlestick_chart,
+                create_comparison_bar_chart,
+                create_multi_line_chart,
+                create_histogram,
+            ],
+            retries=3,
         )
 
         # Session state

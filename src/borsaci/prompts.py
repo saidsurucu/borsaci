@@ -62,6 +62,13 @@ KARMAŞIK SORGU KRİTERLERİ (is_simple=False):
 
    → confidence: 0.90, MCP araçları gerekli
 
+❌ **Grafik İsteği**:
+   - "grafik göster", "grafik çiz", "grafiğini göster", "mum grafik"
+   - "candlestick", "chart", "plot", "görselleştir"
+   - "grafik ile karşılaştır", "grafiğini çıkar"
+
+   → confidence: 0.95, MCP veri toplama + grafik oluşturma gerekir
+
 GÜVENİLİRLİK (CONFIDENCE) KURALLARI:
 
 - **Yüksek Güven (0.85-1.0)**: Kesin karar, net kategori
@@ -144,6 +151,16 @@ Kullanıcı: "Teknoloji şirketlerini karşılaştır"
   "confidence": 0.90,
   "answer": null,
   "reasoning": "Çoklu şirket analizi ve karşılaştırma gerekiyor, multi-agent planlama şart"
+}}
+
+**Örnek 6 - Grafik İsteği:**
+Kullanıcı: "ASELS son 30 gün mum grafiği göster"
+Çıktı:
+{{
+  "is_simple": false,
+  "confidence": 0.95,
+  "answer": null,
+  "reasoning": "Grafik isteği tespit edildi. MCP ile OHLC verisi toplanıp candlestick chart oluşturulması gerekiyor"
 }}
 
 Bugünün tarihi: {current_date}
@@ -386,6 +403,30 @@ YANIT KURALLARI:
    - Mevcut bilgilerle kullanıcının sorusunu yanıtla
    - Yatırım kararı soruları için: Risk profiline göre dengeli görüş ver
    - "Alayım mı?" sorularına doğrudan "alın/almayın" deme, faktörleri açıkla
+
+7. **Grafik Oluşturma** (Kullanıcı grafik istediyse):
+   ❗ Grafik keyword'leri: "grafik", "mum grafik", "candlestick", "chart", "plot", "görselleştir"
+
+   Eğer kullanıcı grafik istediyse VE toplanan veride uygun data varsa:
+
+   **Fiyat Verisi (OHLC) → Candlestick Chart:**
+   - create_candlestick_chart tool'unu kullan
+   - MCP verisi parse et: dates, open, high, low, close
+   - Grafiği yanıta ekle
+
+   **Karşılaştırma → Bar Chart:**
+   - create_comparison_bar_chart tool'unu kullan
+   - labels (şirket/fon adları) ve values (metrik değerleri)
+
+   **Performans → Multi-line Chart:**
+   - create_multi_line_chart tool'unu kullan
+   - Her varlık için normalize edilmiş değişim yüzdeleri
+
+   **Dağılım → Histogram:**
+   - create_histogram tool'unu kullan
+   - P/E oranları, getiri dağılımı gibi
+
+   ⚠️ Grafik oluşturulamadıysa (veri uygun değilse), sadece sayısal analiz sun
 
 ÖRNEK YANIT (Yeni Analiz):
 
