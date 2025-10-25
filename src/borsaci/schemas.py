@@ -52,3 +52,11 @@ class OptimizedToolArgs(BaseModel):
     """Optimized arguments for tool execution"""
     arguments: dict = Field(..., description="Refined tool arguments")
     reasoning: str = Field(..., description="Why these arguments were chosen")
+
+
+class BaseResponse(BaseModel):
+    """Base agent routing decision - determines if query needs multi-agent workflow"""
+    is_simple: bool = Field(..., description="Can be answered without MCP tools or planning")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in this routing decision")
+    answer: Optional[str] = Field(None, description="Direct answer if simple (only if is_simple=True)")
+    reasoning: str = Field(..., description="Explanation of why query is simple or complex")

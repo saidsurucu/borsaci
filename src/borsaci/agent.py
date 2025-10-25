@@ -5,15 +5,18 @@ from datetime import datetime
 import os
 
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart
+from pydantic_ai.usage import RunUsage
 
 from .model import (
     create_planning_agent,
     create_action_agent,
     create_validation_agent,
     create_answer_agent,
+    create_base_agent,
 )
-from .schemas import TaskList, IsDone, Answer, Task
+from .schemas import TaskList, IsDone, Answer, Task, BaseResponse
 from .prompts import (
+    BASE_AGENT_PROMPT,
     PLANNING_PROMPT,
     ACTION_PROMPT,
     VALIDATION_PROMPT,
@@ -62,7 +65,13 @@ class BorsaAgent:
         # MCP Client
         self.mcp = mcp_client or get_mcp_client()
 
-        # Multi-agent setup
+        # Multi-agent setup (programmatic hand-off pattern)
+        # Base agent for routing decisions (simple vs complex queries)
+        self.base_agent = create_base_agent(
+            output_type=BaseResponse,
+            system_prompt=BASE_AGENT_PROMPT.format(current_date=self._get_date()),
+        )
+
         self.planner = create_planning_agent(
             output_type=TaskList,
             system_prompt=PLANNING_PROMPT.format(current_date=self._get_date()),
@@ -120,12 +129,18 @@ class BorsaAgent:
         message_history: Optional[list[ModelMessage]] = None,
     ) -> tuple[str, list[ModelMessage]]:
         """
-        Execute full agentic loop to answer user query.
+        Execute agentic workflow with programmatic agent hand-off.
 
-        Process:
-        1. Plan tasks (with conversation history for context)
-        2. Execute each task with validation loop
-        3. Generate final answer
+        Process (Programmatic Hand-off Pattern):
+        0. Base agent: Route query (simple vs complex)
+           - Simple (confidence > 0.7): Return direct answer
+           - Complex: Proceed to multi-agent workflow
+        1. Planning agent: Decompose into tasks
+        2. Action agent: Execute tasks with MCP tools
+        3. Validation agent: Check completion
+        4. Answer agent: Synthesize final response
+
+        Uses shared RunUsage across all agents for unified tracking.
 
         Args:
             query: User query in Turkish or English
@@ -140,28 +155,58 @@ class BorsaAgent:
             RuntimeError: If max_steps exceeded or critical error
         """
         import sys
+        import asyncio
 
         # Debug logging
         if "--debug" in sys.argv:
             print(f"[DEBUG] agent.run() called with query: {query[:50]}...")
 
-        # Note: MCP connection is managed automatically by PydanticAI
-        # when the Action Agent uses tools from the registered toolset
+        # Shared usage tracking (Pydantic AI pattern)
+        usage = RunUsage()
 
         # Reset session state
         step_count = 0
         self.last_actions = []
         session_outputs = []
 
-        if "--debug" in sys.argv:
-            print("[DEBUG] About to call planner...")
+        # Step 0: Base agent routing (simple vs complex)
+        print("🔍 Sorgu analiz ediliyor...")
+        try:
+            base_result = await asyncio.wait_for(
+                self.base_agent.run(
+                    query,
+                    message_history=message_history,
+                    usage=usage,  # Shared usage tracking
+                ),
+                timeout=30.0
+            )
+
+            if "--debug" in sys.argv:
+                print(f"[DEBUG] Base agent decision: is_simple={base_result.output.is_simple}, confidence={base_result.output.confidence}")
+                print(f"[DEBUG] Reasoning: {base_result.output.reasoning}")
+
+            # Simple query with high confidence? Return direct answer
+            if base_result.output.is_simple and base_result.output.confidence > 0.7:
+                print(f"✅ Basit sorgu (güven: {base_result.output.confidence:.0%}) - direkt yanıt veriliyor")
+
+                # Return answer from base agent
+                return base_result.output.answer, base_result.all_messages()
+
+            # Complex query: Proceed to multi-agent workflow
+            print(f"🔧 Karmaşık sorgu (güven: {base_result.output.confidence:.0%}) - planlama başlatılıyor...")
+
+        except asyncio.TimeoutError:
+            print("⚠️  Base agent zaman aşımına uğradı, planlama workflow'una devam ediliyor...")
 
         # Step 1: Plan tasks (with conversation history)
         print("🔍 Görevler planlanıyor...")
-        import asyncio
         try:
             task_result = await asyncio.wait_for(
-                self.planner.run(query, message_history=message_history),
+                self.planner.run(
+                    query,
+                    message_history=message_history,
+                    usage=usage,  # Shared usage tracking
+                ),
                 timeout=60.0
             )
             tasks = task_result.output.tasks
@@ -175,7 +220,7 @@ class BorsaAgent:
         if not tasks:
             # No tasks created - likely out of scope
             print("⚠️  Görev bulunamadı, doğrudan yanıt üretiliyor...")
-            answer = await self._generate_answer(query, session_outputs)
+            answer = await self._generate_answer(query, session_outputs, usage)
 
             # Create final response message
             final_message = ModelResponse(
@@ -197,7 +242,7 @@ class BorsaAgent:
                 print(f"⚠️  Global maksimum adım sayısına ulaşıldı ({self.max_steps})")
                 break
 
-            task_outputs = await self._execute_task(task, step_count)
+            task_outputs = await self._execute_task(task, step_count, usage)
             session_outputs.extend(task_outputs)
 
             # Update step count (approximate)
@@ -205,7 +250,7 @@ class BorsaAgent:
 
         # Step 3: Generate final answer
         print("📝 Yanıt oluşturuluyor...")
-        answer = await self._generate_answer(query, session_outputs)
+        answer = await self._generate_answer(query, session_outputs, usage)
 
         # Step 4: Create final response message for conversation history
         final_message = ModelResponse(
@@ -218,7 +263,7 @@ class BorsaAgent:
 
         return answer, all_messages
 
-    async def _execute_task(self, task: Task, current_step: int) -> list[str]:
+    async def _execute_task(self, task: Task, current_step: int, usage: RunUsage) -> list[str]:
         """
         Execute a single task with validation loop using Action Agent.
 
@@ -228,6 +273,7 @@ class BorsaAgent:
         Args:
             task: Task to execute
             current_step: Current global step count
+            usage: Shared RunUsage for tracking across all agents
 
         Returns:
             List of output strings from tool executions
@@ -254,7 +300,7 @@ class BorsaAgent:
                 """
 
                 result = await asyncio.wait_for(
-                    self.actor.run(action_prompt),
+                    self.actor.run(action_prompt, usage=usage),  # Shared usage tracking
                     timeout=60.0  # MCP tool calls can take longer
                 )
 
@@ -290,7 +336,7 @@ class BorsaAgent:
                 outputs.append(error_msg)
 
             # Validate task completion
-            is_done = await self._validate_task(task, outputs)
+            is_done = await self._validate_task(task, outputs, usage)
 
             if is_done.done:
                 print(f"   ✅ Görev tamamlandı (güven: {is_done.confidence:.0%})")
@@ -301,13 +347,14 @@ class BorsaAgent:
 
         return outputs
 
-    async def _validate_task(self, task: Task, outputs: list[str]) -> IsDone:
+    async def _validate_task(self, task: Task, outputs: list[str], usage: RunUsage) -> IsDone:
         """
         Validate if task is complete.
 
         Args:
             task: Task being validated
             outputs: Outputs collected so far
+            usage: Shared RunUsage for tracking
 
         Returns:
             IsDone validation result
@@ -324,7 +371,7 @@ class BorsaAgent:
         try:
             import asyncio
             result = await asyncio.wait_for(
-                self.validator.run(validation_prompt),
+                self.validator.run(validation_prompt, usage=usage),  # Shared usage tracking
                 timeout=60.0  # 60 second timeout for validation
             )
             return result.output
@@ -335,13 +382,14 @@ class BorsaAgent:
             # If validation fails, assume not done
             return IsDone(done=False, reason=f"Doğrulama hatası: {str(e)}", confidence=0.3)
 
-    async def _generate_answer(self, query: str, session_outputs: list[str]) -> str:
+    async def _generate_answer(self, query: str, session_outputs: list[str], usage: RunUsage) -> str:
         """
         Generate final answer from collected data.
 
         Args:
             query: Original user query
             session_outputs: All outputs from task executions
+            usage: Shared RunUsage for tracking
 
         Returns:
             Formatted answer in Turkish with disclaimer
@@ -361,7 +409,7 @@ class BorsaAgent:
             # Add timeout to prevent indefinite hanging
             import asyncio
             result = await asyncio.wait_for(
-                self.answerer.run(answer_prompt),
+                self.answerer.run(answer_prompt, usage=usage),  # Shared usage tracking
                 timeout=60.0  # 60 second timeout
             )
             return result.output.answer

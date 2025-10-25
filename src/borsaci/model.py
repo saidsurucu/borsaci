@@ -176,3 +176,26 @@ def create_answer_agent(output_type: type, system_prompt: str) -> Agent:
         output_type=output_type,
         retries=3,
     )
+
+
+def create_base_agent(output_type: type, system_prompt: str) -> Agent:
+    """
+    Create base routing agent for query triage.
+
+    Uses Gemini 2.5 Flash for fast routing decisions (simple vs complex queries).
+    This agent determines if a query can be answered directly or needs
+    multi-agent workflow with MCP tools.
+
+    Args:
+        output_type: Pydantic model for routing decision (BaseResponse)
+        system_prompt: System prompt for routing logic
+
+    Returns:
+        Base routing agent with 3 retries
+    """
+    return create_agent(
+        model=get_action_model(),  # Flash - fast and cheap for routing
+        system_prompt=system_prompt,
+        output_type=output_type,
+        retries=3,
+    )
