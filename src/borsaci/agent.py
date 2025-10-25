@@ -30,6 +30,7 @@ from .prompts import (
 from .mcp_tools import BorsaMCP, get_mcp_client
 from .utils.charts import (
     create_candlestick_chart,
+    create_candlestick_from_json,
     create_comparison_bar_chart,
     create_multi_line_chart,
     create_histogram,
@@ -105,6 +106,7 @@ class BorsaAgent:
             model=get_answer_model(),
             system_prompt=get_answer_prompt(),
             tools=[
+                create_candlestick_from_json,  # Simplified wrapper (recommended)
                 create_candlestick_chart,
                 create_comparison_bar_chart,
                 create_multi_line_chart,
@@ -428,7 +430,7 @@ class BorsaAgent:
 
         Bu verileri kullanarak kullanıcıya kapsamlı bir Türkçe yanıt oluştur.
 
-        {"ÖNEMLİ: Kullanıcı grafik istedi. Eğer toplanan veride OHLC/fiyat verisi varsa, create_candlestick_chart tool'unu kullanarak mum grafiği oluştur ve yanıta ekle." if needs_chart else ""}
+        {"ÖNEMLİ: Kullanıcı grafik istedi. Eğer toplanan veride OHLC/fiyat verisi (JSON format) varsa, create_candlestick_from_json tool'unu kullanarak mum grafiği oluştur ve yanıta ekle. JSON verisini direkt tool'a geçir." if needs_chart else ""}
         """
 
         try:

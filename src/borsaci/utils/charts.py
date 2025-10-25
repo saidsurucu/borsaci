@@ -68,6 +68,51 @@ def create_candlestick_chart(
     return plt.build()
 
 
+def create_candlestick_from_json(
+    json_data: str,
+    title: str = "Fiyat Grafiği",
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+) -> str:
+    """
+    Create candlestick chart from MCP OHLC JSON data (auto-parse wrapper).
+
+    This is a simplified wrapper around create_candlestick_chart that automatically
+    parses MCP get_finansal_veri output and renders the chart.
+
+    Args:
+        json_data: Raw JSON string from MCP tool (get_finansal_veri)
+                  Expected format: '[{"date":"2024-01-01","open":100,"high":105,"low":98,"close":102}]'
+        title: Chart title
+        width: Chart width (None = auto)
+        height: Chart height (None = auto)
+
+    Returns:
+        Rendered chart as string, or error message if parsing fails
+
+    Example:
+        >>> json_str = '[{"date":"2024-01-01","open":100,"high":105,"low":98,"close":102}]'
+        >>> chart = create_candlestick_from_json(json_str, "ASELS Mum Grafik")
+    """
+    # Parse the JSON data
+    parsed = parse_price_data_for_candlestick(json_data)
+
+    if parsed is None:
+        return "❌ OHLC verisi parse edilemedi. JSON formatı hatalı veya eksik alanlar var."
+
+    # Create the chart
+    return create_candlestick_chart(
+        dates=parsed['dates'],
+        open_prices=parsed['open'],
+        high_prices=parsed['high'],
+        low_prices=parsed['low'],
+        close_prices=parsed['close'],
+        title=title,
+        width=width,
+        height=height,
+    )
+
+
 def create_comparison_bar_chart(
     labels: List[str],
     values: List[float],

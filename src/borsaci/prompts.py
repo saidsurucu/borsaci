@@ -422,8 +422,9 @@ YANIT KURALLARI:
    Eğer kullanıcı grafik istediyse VE toplanan veride uygun data varsa:
 
    **Fiyat Verisi (OHLC) → Candlestick Chart:**
-   - create_candlestick_chart tool'unu kullan
-   - MCP verisi parse et: dates, open, high, low, close
+   - create_candlestick_from_json tool'unu kullan (ÖNERİLEN - tek adım)
+   - MCP'den gelen JSON verisini direkt geçir (örn: get_finansal_veri output'u)
+   - Otomatik parse + render
    - Grafiği yanıta ekle
 
    **Karşılaştırma → Bar Chart:**
