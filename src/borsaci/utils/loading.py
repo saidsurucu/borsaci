@@ -38,8 +38,10 @@ class LoadingAnimation:
             return Text("")
 
         frame = self.frames[self.current_frame % len(self.frames)]
-        hint = " [dim](ESC ile iptal)[/dim]" if not self._cancelled else ""
-        return Text(f"{self.message}{frame}{hint}", style="cyan")
+        text = Text(f"{self.message}{frame}", style="cyan")
+        if not self._cancelled:
+            text.append(" (ESC ile iptal)", style="dim")
+        return text
 
     def next_frame(self):
         """Advance to next animation frame"""
