@@ -45,7 +45,7 @@ def create_candlestick_chart(
     if width and height:
         plt.plot_size(width, height)
 
-    # Date formatting
+    # Date formatting (plotext uses simplified format without %)
     plt.date_form('Y-m-d')
 
     # Prepare data in plotext format (dict with keys: Open, High, Low, Close)
@@ -64,7 +64,7 @@ def create_candlestick_chart(
     plt.xlabel("Tarih")
     plt.ylabel("Fiyat (TL)")
 
-    # Build and return as string
+    # Build and return raw ANSI output (Rich will handle rendering)
     return plt.build()
 
 
@@ -154,7 +154,7 @@ def create_comparison_bar_chart(
     plt.xlabel("Şirket/Varlık")
     plt.ylabel(ylabel)
 
-    # Build and return as string
+    # Build and return raw ANSI output (Rich will handle rendering)
     return plt.build()
 
 
@@ -191,9 +191,6 @@ def create_multi_line_chart(
     if width and height:
         plt.plot_size(width, height)
 
-    # Date formatting
-    plt.date_form('Y-m-d')
-
     # Plot each series
     for label, values in series_data.items():
         plt.plot(dates, values, label=label)
@@ -203,7 +200,7 @@ def create_multi_line_chart(
     plt.xlabel("Tarih")
     plt.ylabel(ylabel)
 
-    # Build and return as string
+    # Build and return raw ANSI output (Rich will handle rendering)
     return plt.build()
 
 
@@ -247,7 +244,7 @@ def create_histogram(
     plt.xlabel(xlabel)
     plt.ylabel("Frekans")
 
-    # Build and return as string
+    # Build and return raw ANSI output (Rich will handle rendering)
     return plt.build()
 
 

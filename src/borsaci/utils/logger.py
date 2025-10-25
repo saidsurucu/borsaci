@@ -5,7 +5,9 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from rich.markdown import Markdown
+from rich.ansi import AnsiDecoder
 from typing import Optional
+import re
 
 
 class Logger:
@@ -66,12 +68,30 @@ class Logger:
         )
 
     def log_summary(self, answer: str):
-        """Log final answer with markdown rendering"""
+        """Log final answer with markdown rendering and ANSI chart support"""
         self.console.print()
         self.console.print("[bold green]📊 Sonuç[/bold green]")
         self.console.print()
-        # Render markdown for better formatting (bold, lists, tables, etc.)
-        self.console.print(Markdown(answer))
+
+        # Check if answer contains ANSI escape codes (plotext charts)
+        # ANSI codes start with ESC (0x1b or \x1b or \033)
+        has_ansi = bool(re.search(r'\x1b\[', answer))
+
+        if has_ansi:
+            # Split answer into text and chart parts
+            # plotext charts are typically large blocks of ANSI-encoded content
+            # We'll render ANSI parts as-is and markdown parts with Markdown()
+            decoder = AnsiDecoder()
+
+            # For now, render the whole answer with ANSI decoder
+            # This preserves plotext colors while still showing text
+            decoded = decoder.decode(answer)
+            for segment in decoded:
+                self.console.print(segment)
+        else:
+            # No ANSI codes, use normal markdown rendering
+            self.console.print(Markdown(answer))
+
         self.console.print()
 
     def log_error(self, error: str):

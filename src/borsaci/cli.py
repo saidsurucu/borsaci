@@ -249,7 +249,7 @@ async def async_main():
                         print(f"[DEBUG] Conversation history has {len(conversation_history)} messages")
 
                     # Run agent with conversation history + loading animation + ESC cancel
-                    answer, messages = await run_with_loading_and_cancel(
+                    answer, chart, messages = await run_with_loading_and_cancel(
                         agent.run(query, message_history=conversation_history)
                     )
 
@@ -258,9 +258,17 @@ async def async_main():
 
                     if "--debug" in sys.argv:
                         print(f"[DEBUG] agent.run() returned, answer length: {len(answer)}")
+                        print(f"[DEBUG] Chart present: {chart is not None}")
                         print(f"[DEBUG] Updated history now has {len(conversation_history)} messages")
 
+                    # Display answer first
                     logger.log_summary(answer)
+
+                    # Display chart separately if present (rendered directly to terminal)
+                    if chart:
+                        print()  # Empty line for spacing
+                        print(chart)
+                        print()  # Empty line after chart
 
                 except asyncio.CancelledError:
                     logger.log_warning("⚠️  İşlem iptal edildi (ESC)")
