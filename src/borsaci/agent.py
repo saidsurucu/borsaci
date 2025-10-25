@@ -3,6 +3,10 @@
 from typing import Optional
 from datetime import datetime
 import os
+import warnings
+
+# Suppress Gemini additionalProperties warning (known Gemini limitation)
+warnings.filterwarnings("ignore", message=".*additionalProperties.*Gemini.*")
 
 from pydantic_ai import Agent
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart
@@ -96,10 +100,10 @@ class BorsaAgent:
         )
 
         # Create answer agent with chart tools
+        # Note: No output_type so LLM can generate free-form text with embedded chart results
         self.answerer = Agent(
             model=get_answer_model(),
             system_prompt=get_answer_prompt(),
-            output_type=Answer,
             tools=[
                 create_candlestick_chart,
                 create_comparison_bar_chart,
@@ -428,7 +432,8 @@ class BorsaAgent:
                 self.answerer.run(answer_prompt, usage=usage),  # Shared usage tracking
                 timeout=60.0  # 60 second timeout
             )
-            return result.output.answer
+            # No output_type, so result.data contains the plain text response
+            return result.data
         except asyncio.TimeoutError:
             return f"""
 ❌ Yanıt oluşturma zaman aşımına uğradı (60 saniye).
