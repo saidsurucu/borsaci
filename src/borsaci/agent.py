@@ -416,6 +416,10 @@ class BorsaAgent:
         """
         all_data = "\n\n".join(session_outputs) if session_outputs else "Veri toplanamadı."
 
+        # Detect chart request keywords
+        chart_keywords = ['grafik', 'mum grafik', 'candlestick', 'chart', 'plot', 'görselleştir']
+        needs_chart = any(keyword in query.lower() for keyword in chart_keywords)
+
         answer_prompt = f"""
         Kullanıcı Sorusu: {query}
 
@@ -423,6 +427,8 @@ class BorsaAgent:
         {all_data}
 
         Bu verileri kullanarak kullanıcıya kapsamlı bir Türkçe yanıt oluştur.
+
+        {"ÖNEMLİ: Kullanıcı grafik istedi. Eğer toplanan veride OHLC/fiyat verisi varsa, create_candlestick_chart tool'unu kullanarak mum grafiği oluştur ve yanıta ekle." if needs_chart else ""}
         """
 
         try:
@@ -432,8 +438,8 @@ class BorsaAgent:
                 self.answerer.run(answer_prompt, usage=usage),  # Shared usage tracking
                 timeout=60.0  # 60 second timeout
             )
-            # No output_type, so result.data contains the plain text response
-            return result.data
+            # No output_type, result.output contains the plain text response
+            return result.output
         except asyncio.TimeoutError:
             return f"""
 ❌ Yanıt oluşturma zaman aşımına uğradı (60 saniye).
