@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "borsaci"
+version = "0.1.0"
+description = "Türk finans piyasaları için AI agent - BIST, TEFAS, Kripto ve daha fazlası"
+authors = [{name = "Said Surucu"}]
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic-ai>=0.0.14",
+    "fastmcp>=2.11.0",
+    "prompt-toolkit>=3.0.0",
+    "python-dotenv>=1.1.1",
+    "rich>=13.0.0",
+    "pydantic>=2.11.10",
+]
+
+[project.scripts]
+borsaci = "borsaci.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.urls]
+Homepage = "https://github.com/saidsurucu/borsaci"
+Repository = "https://github.com/saidsurucu/borsaci"
