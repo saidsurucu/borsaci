@@ -422,6 +422,12 @@ class BorsaAgent:
         chart_keywords = ['grafik', 'mum grafik', 'candlestick', 'chart', 'plot', 'görselleştir']
         needs_chart = any(keyword in query.lower() for keyword in chart_keywords)
 
+        # Debug: Check collected data format
+        import sys
+        if "--debug" in sys.argv and needs_chart:
+            print(f"\n[DEBUG] Collected data preview (first 500 chars):")
+            print(all_data[:500])
+
         answer_prompt = f"""
         Kullanıcı Sorusu: {query}
 
@@ -430,16 +436,29 @@ class BorsaAgent:
 
         Bu verileri kullanarak kullanıcıya kapsamlı bir Türkçe yanıt oluştur.
 
-        {"ÖNEMLİ: Kullanıcı grafik istedi. Eğer toplanan veride OHLC/fiyat verisi (JSON format) varsa, create_candlestick_from_json tool'unu kullanarak mum grafiği oluştur ve yanıta ekle. JSON verisini direkt tool'a geçir." if needs_chart else ""}
+        {"ÖNEMLİ: Kullanıcı grafik istedi. create_candlestick_chart veya create_candlestick_from_json tool'unu kullanarak mum grafiği oluştur. Tool'dan dönen grafiği (ASCII chart) AYNEN yanıtına EKLE - atla veya özetle" if needs_chart else ""}
         """
 
         try:
             # Add timeout to prevent indefinite hanging
             import asyncio
+            import sys
             result = await asyncio.wait_for(
                 self.answerer.run(answer_prompt, usage=usage),  # Shared usage tracking
                 timeout=60.0  # 60 second timeout
             )
+
+            # Debug: Check if chart tool was called
+            if "--debug" in sys.argv and needs_chart:
+                print("\n[DEBUG] Answer Agent Tool Calls:")
+                from pydantic_ai.messages import ModelResponse
+                for msg in result.all_messages():
+                    if isinstance(msg, ModelResponse):
+                        for part in msg.parts:
+                            part_type = type(part).__name__
+                            if "Tool" in part_type:
+                                print(f"  {part_type}: {str(part)[:300]}")
+
             # No output_type, result.output contains the plain text response
             return result.output
         except asyncio.TimeoutError:

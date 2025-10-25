@@ -291,6 +291,7 @@ ARAÇ SEÇME KURALLARI:
    - Fiyat grafiği/OHLC/Mum grafik → get_finansal_veri
    - OHLCV verisi döndürür: Open, High, Low, Close, Volume
    - Parametreler: ticker, period (1w, 1m, 3m, 6m, 1y, 2y)
+   - ÖNEMLİ: Tool yanıtını RAW JSON olarak döndür, parse etme!
 
 3. **Fon Araması**:
    - Fon adı/kodu verilmişse → search_funds
