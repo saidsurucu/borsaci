@@ -477,23 +477,95 @@ Toplanan veriler:
             ANSI chart string or None if chart couldn't be created
         """
         try:
-            # Try to find JSON data (OHLC format)
             import json
             import re
+            import sys
 
-            # Look for JSON array pattern in data
-            json_match = re.search(r'\[{.*?"date".*?"open".*?"high".*?"low".*?"close".*?}\]', data, re.DOTALL)
+            # Debug: Show what we received
+            if "--debug" in sys.argv:
+                print(f"\n[DEBUG] Chart data (first 1000 chars):")
+                print(data[:1000])
+                print(f"\n[DEBUG] Looking for JSON array...")
+
+            # Try JSON first
+            json_match = re.search(r'\[\s*\{[^}]*"date"[^}]*"open"[^}]*"high"[^}]*"low"[^}]*"close"[^}]*\}[^\]]*\]', data, re.DOTALL | re.IGNORECASE)
 
             if json_match:
                 json_str = json_match.group(0)
 
-                # Extract ticker from query (simple heuristic)
-                ticker_match = re.search(r'\b([A-Z]{4,6})\b', query)
+                if "--debug" in sys.argv:
+                    print(f"[DEBUG] Found JSON! Length: {len(json_str)}")
+
+                ticker_match = re.search(r'\b([A-Z]{4,6})\b', query.upper())
                 title = f"{ticker_match.group(1)} Fiyat Grafiği" if ticker_match else "Fiyat Grafiği"
 
-                # Call chart function
                 chart = create_candlestick_from_json(json_str, title=title)
                 return chart
+
+            # Fallback: Parse markdown table
+            if "--debug" in sys.argv:
+                print(f"[DEBUG] No JSON found, trying markdown table parse...")
+
+            # Try both date formats and column orders since LLM output varies
+            # Format 1: YYYY-MM-DD with Open | High | Low | Close
+            table_rows = re.findall(r'\|\s*\*?\*?(\d{4}-\d{2}-\d{2})\*?\*?\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|', data)
+            format_type = "YYYY-MM-DD"
+
+            # Format 2: DD.MM.YYYY if first format didn't match
+            if not table_rows:
+                table_rows = re.findall(r'\|\s*\*?\*?(\d{2}\.\d{2}\.\d{4})\*?\*?\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|\s*([\d.,]+)\s*\|', data)
+                format_type = "DD.MM.YYYY"
+
+            if table_rows:
+                if "--debug" in sys.argv:
+                    print(f"[DEBUG] Found {len(table_rows)} rows in markdown table (format: {format_type})")
+
+                # Detect column order by looking at table header
+                # Common patterns: "Açılış | En Yüksek | En Düşük" or "Açılış | En Düşük | En Yüksek"
+                is_high_before_low = bool(re.search(r'Açılış.*En Yüksek.*En Düşük', data, re.IGNORECASE))
+
+                # Build JSON from table
+                json_data = []
+                for row in table_rows:
+                    date_str = row[0]
+
+                    # Convert date to YYYY-MM-DD if needed
+                    if format_type == "DD.MM.YYYY":
+                        day, month, year = date_str.split('.')
+                        date_iso = f"{year}-{month}-{day}"
+                    else:
+                        date_iso = date_str
+
+                    # Parse values based on detected column order
+                    if is_high_before_low:
+                        # Open | High | Low | Close
+                        acilis, yuksek, dusuk, kapanis = row[1], row[2], row[3], row[4]
+                    else:
+                        # Open | Low | High | Close
+                        acilis, dusuk, yuksek, kapanis = row[1], row[2], row[3], row[4]
+
+                    # Remove thousands separator
+                    json_data.append({
+                        "date": date_iso,
+                        "open": float(acilis.replace(',', '')),
+                        "low": float(dusuk.replace(',', '')),
+                        "high": float(yuksek.replace(',', '')),
+                        "close": float(kapanis.replace(',', ''))
+                    })
+
+                json_str = json.dumps(json_data)
+
+                if "--debug" in sys.argv:
+                    print(f"[DEBUG] Created JSON from table: {json_str[:200]}...")
+
+                ticker_match = re.search(r'\b([A-Z]{4,6})\b', query.upper())
+                title = f"{ticker_match.group(1)} Fiyat Grafiği" if ticker_match else "Fiyat Grafiği"
+
+                chart = create_candlestick_from_json(json_str, title=title)
+                return chart
+
+            if "--debug" in sys.argv:
+                print(f"[DEBUG] No parseable data found")
 
             return None
 
@@ -501,4 +573,6 @@ Toplanan veriler:
             import sys
             if "--debug" in sys.argv:
                 print(f"[DEBUG] Chart creation failed: {e}")
+                import traceback
+                traceback.print_exc()
             return None
