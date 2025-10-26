@@ -10,6 +10,10 @@ class Task(BaseModel):
     description: str = Field(..., description="Task description in Turkish")
     done: bool = Field(default=False, description="Whether task is completed")
     tool_name: Optional[str] = Field(None, description="MCP tool to use for this task")
+    depends_on: list[int] = Field(
+        default_factory=list,
+        description="List of task IDs this task depends on (empty if independent)"
+    )
 
 
 class TaskList(BaseModel):

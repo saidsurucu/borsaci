@@ -251,6 +251,45 @@ PLANLAMA KURALLARI:
    - Farklı şirket/fon/varlık analizi için
    - Yeni veri toplama gerektiren karşılaştırmalar için
 
+8. **Task Bağımlılıkları (depends_on)**:
+
+   ❗ ÇOK ÖNEMLİ: Her task için "depends_on" alanını doldur!
+
+   - **Bağımsız Task** (paralel çalıştırılabilir): `"depends_on": []`
+   - **Bağımlı Task**: `"depends_on": [1, 2]` (task 1 ve 2 tamamlanmalı)
+
+   **Bağımsız Task Örnekleri** (paralel çalıştırılabilir):
+   - Farklı şirketlerin aynı verisi: ["ASELS fiyatı", "THYAO fiyatı", "GARAN fiyatı"]
+   - Farklı varlık türlerinin verileri: ["Altın fiyatı", "Dolar kuru", "BIST100"]
+   - Aynı şirketin farklı kaynaklardan verileri: ["ASELS finansalları", "ASELS teknik analiz"]
+
+   **Bağımlı Task Örnekleri** (sıralı çalışmalı):
+   - Önce şirket ara → sonra finansal al: Task 2 depends_on: [1]
+   - Veri topla → sonra hesapla/karşılaştır: Task 3 depends_on: [1, 2]
+   - Fiyat al → önceki dönem al → değişim hesapla: Task 3 depends_on: [1, 2]
+
+   **Format**:
+   {{
+     "id": 1,
+     "description": "ASELS fiyatını al",
+     "tool_name": "get_price_data",
+     "depends_on": []  // Bağımsız task
+   }}
+
+   {{
+     "id": 2,
+     "description": "THYAO fiyatını al",
+     "tool_name": "get_price_data",
+     "depends_on": []  // ASELS'den bağımsız, paralel çalışabilir
+   }}
+
+   {{
+     "id": 3,
+     "description": "ASELS ve THYAO performansını karşılaştır",
+     "tool_name": None,  // Analitik task, araç yok
+     "depends_on": [1, 2]  // Task 1 ve 2 tamamlanmalı
+   }}
+
 ÖRNEKLER:
 
 **Örnek 1 - Yeni Analiz (Görev planla):**

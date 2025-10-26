@@ -137,6 +137,127 @@ class BorsaAgent:
         from datetime import datetime
         return datetime.now().strftime("%d.%m.%Y")
 
+    def _build_execution_plan(self, tasks: list[Task]) -> list[list[Task]]:
+        """
+        Build execution plan with dependency ordering using topological sort.
+        Returns list of task groups - each group can run in parallel.
+
+        Algorithm:
+        1. Build dependency graph
+        2. Group tasks by "level" (distance from root nodes)
+        3. Tasks in same level have no dependencies on each other → parallel
+
+        Args:
+            tasks: List of tasks with dependency information
+
+        Returns:
+            List of task groups (each group = list of independent tasks)
+            Example: [[Task1, Task2], [Task3]] means Task1 & Task2 parallel, then Task3
+
+        Raises:
+            RuntimeError: If circular dependency detected
+        """
+        import sys
+        from collections import defaultdict, deque
+
+        if not tasks:
+            return []
+
+        # Build dependency graph: {task_id: [dependent_task_ids]}
+        graph = defaultdict(list)
+        in_degree = {task.id: 0 for task in tasks}
+        task_map = {task.id: task for task in tasks}
+
+        for task in tasks:
+            in_degree[task.id] = len(task.depends_on)
+            for dep_id in task.depends_on:
+                if dep_id not in task_map:
+                    print(f"⚠️  Task {task.id} depends on non-existent task {dep_id}, ignoring dependency")
+                    in_degree[task.id] -= 1
+                    continue
+                graph[dep_id].append(task.id)
+
+        # Topological sort with level grouping (Kahn's algorithm)
+        execution_plan = []
+        queue = deque([task_id for task_id, deg in in_degree.items() if deg == 0])
+
+        if "--debug" in sys.argv and len(queue) > 1:
+            print(f"[DEBUG] {len(queue)} independent tasks detected (can run in parallel)")
+
+        processed = 0
+        while queue:
+            # All tasks in current queue have in_degree=0 → can run in parallel
+            current_level = []
+            level_size = len(queue)
+
+            for _ in range(level_size):
+                task_id = queue.popleft()
+                current_level.append(task_map[task_id])
+                processed += 1
+
+                # Reduce in_degree for dependent tasks
+                for dependent_id in graph[task_id]:
+                    in_degree[dependent_id] -= 1
+                    if in_degree[dependent_id] == 0:
+                        queue.append(dependent_id)
+
+            execution_plan.append(current_level)
+
+        # Check for circular dependencies
+        if processed < len(tasks):
+            unprocessed = [task.id for task in tasks if task.id not in [t.id for group in execution_plan for t in group]]
+            raise RuntimeError(f"Circular dependency detected! Unprocessed tasks: {unprocessed}")
+
+        if "--debug" in sys.argv:
+            print(f"[DEBUG] Execution plan: {len(execution_plan)} levels")
+            for i, group in enumerate(execution_plan):
+                print(f"[DEBUG]   Level {i+1}: {len(group)} tasks (IDs: {[t.id for t in group]})")
+
+        return execution_plan
+
+    async def _execute_task_group_parallel(
+        self,
+        task_group: list[Task],
+        current_step: int,
+        usage: RunUsage,
+    ) -> dict[int, list[str]]:
+        """
+        Execute a group of independent tasks in parallel using asyncio.gather().
+
+        Args:
+            task_group: List of independent tasks (no dependencies on each other)
+            current_step: Current global step count
+            usage: Shared RunUsage for tracking
+
+        Returns:
+            Dictionary mapping task_id to list of outputs
+
+        Note:
+            - Failed tasks return error message in outputs
+            - One task failure doesn't affect others
+        """
+        import asyncio
+        import sys
+
+        if "--debug" in sys.argv:
+            print(f"[DEBUG] Executing {len(task_group)} tasks in parallel...")
+
+        async def execute_single(task: Task) -> tuple[int, list[str]]:
+            """Execute single task and return (task_id, outputs)"""
+            try:
+                outputs = await self._execute_task(task, current_step, usage)
+                return (task.id, outputs)
+            except Exception as e:
+                error_msg = f"Task {task.id} failed: {str(e)}"
+                print(f"   ❌ {error_msg}")
+                return (task.id, [error_msg])
+
+        # Execute all tasks in parallel
+        results = await asyncio.gather(*[execute_single(task) for task in task_group])
+
+        # Convert to dict
+        return dict(results)
+
     async def run(
         self,
         query: str,
@@ -251,17 +372,41 @@ class BorsaAgent:
         for task in tasks:
             print(f"   {task.id}. {task.description}")
 
-        # Step 2: Execute tasks
-        for task in tasks:
+        # Step 2: Build execution plan with dependency analysis
+        execution_plan = self._build_execution_plan(tasks)
+
+        # Check if parallel execution is enabled (default: true)
+        parallel_enabled = os.getenv("PARALLEL_EXECUTION", "true").lower() != "false"
+
+        if not parallel_enabled and "--debug" in sys.argv:
+            print("[DEBUG] Parallel execution disabled (PARALLEL_EXECUTION=false)")
+
+        # Step 3: Execute tasks (with dependency-aware parallelization)
+        for level_idx, task_group in enumerate(execution_plan):
             if step_count >= self.max_steps:
                 print(f"⚠️  Global maksimum adım sayısına ulaşıldı ({self.max_steps})")
                 break
 
-            task_outputs = await self._execute_task(task, step_count, usage)
-            session_outputs.extend(task_outputs)
+            # If parallel execution enabled and multiple tasks in group, run in parallel
+            if parallel_enabled and len(task_group) > 1:
+                print(f"\n⚡ {len(task_group)} görev paralel çalıştırılıyor (Level {level_idx + 1})...")
+                outputs_dict = await self._execute_task_group_parallel(task_group, step_count, usage)
 
-            # Update step count (approximate)
-            step_count += len(task_outputs)
+                # Collect outputs in order
+                for task in task_group:
+                    task_outputs = outputs_dict.get(task.id, [])
+                    session_outputs.extend(task_outputs)
+                    step_count += len(task_outputs)
+
+            else:
+                # Single task or parallel disabled - run sequentially
+                for task in task_group:
+                    if step_count >= self.max_steps:
+                        break
+
+                    task_outputs = await self._execute_task(task, step_count, usage)
+                    session_outputs.extend(task_outputs)
+                    step_count += len(task_outputs)
 
         # Step 3: Generate final answer and chart (if applicable)
         print("📝 Yanıt oluşturuluyor...")
