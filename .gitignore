@@ -64,3 +64,6 @@ dmypy.json
 
 # External references
 dexter/
+
+# Claude Code documentation (AI assistant guidance)
+CLAUDE.md
