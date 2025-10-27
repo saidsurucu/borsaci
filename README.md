@@ -6,7 +6,7 @@
 >
 > Bu proje **tamamen eğitim ve araştırma amaçlı** geliştirilmiştir. Gerçek finansal kararlar için kullanılmamalıdır.
 
-BorsaCI, Borsa MCP sunucusunu kullanarak BIST hisseleri, TEFAS fonları, kripto paralar, döviz kurları ve makro ekonomik verilere erişim sağlayan akıllı bir finansal asistanıdır.
+Borsacı, Borsa MCP sunucusunu kullanarak BIST hisseleri, TEFAS fonları, kripto paralar, döviz kurları ve makro ekonomik verilere erişim sağlayan ve bu verileri anlamlandırmayı amaçlayan bir AI Agent'tır.
 
 ## 🌟 Özellikler
 
@@ -104,7 +104,7 @@ PARALLEL_EXECUTION=true         # Paralel görev yürütme (önerilen: true)
 
 ### İlk Çalıştırma
 
-BorsaCI ilk kez çalıştırıldığında API key'inizi soracaktır:
+Borsacı ilk kez çalıştırıldığında API key'inizi soracaktır:
 
 ```bash
 $ uv run borsaci
@@ -189,7 +189,7 @@ uv run borsaci
 
 ## 🏗️ Mimari
 
-BorsaCI, **Dexter** tarzı multi-agent pattern kullanır ve modern özelliklerle güçlendirilmiştir:
+Borsacı, **Dexter** tarzı multi-agent pattern kullanır ve modern özelliklerle güçlendirilmiştir:
 
 ### 🔄 Agent Akışı
 
@@ -524,7 +524,6 @@ MIT License - Detaylar için [LICENSE](LICENSE) dosyasına bakın.
 
 - **Dexter** ekibine multi-agent pattern ilhamı için
 - **Pydantic** ekibine harika framework için
-- **Z.AI** ekibine GLM-4.6 için
 - **OpenRouter** ekibine esnek API gateway için
 
 ---
