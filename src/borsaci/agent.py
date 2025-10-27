@@ -326,7 +326,9 @@ class BorsaAgent:
                 print(f"✅ Basit sorgu (güven: {base_result.output.confidence:.0%}) - direkt yanıt veriliyor")
 
                 # Return answer from base agent (no chart for simple queries)
-                return base_result.output.answer, None, base_result.all_messages()
+                # If answer is None, provide reasoning as fallback
+                answer = base_result.output.answer or base_result.output.reasoning
+                return answer, None, base_result.all_messages()
 
             # Complex query: Proceed to multi-agent workflow
             print(f"🔧 Karmaşık sorgu (güven: {base_result.output.confidence:.0%}) - planlama başlatılıyor...")
