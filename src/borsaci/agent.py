@@ -314,7 +314,7 @@ class BorsaAgent:
                     message_history=message_history,
                     usage=usage,  # Shared usage tracking
                 ),
-                timeout=30.0
+                timeout=300.0
             )
 
             if "--debug" in sys.argv:
@@ -343,7 +343,7 @@ class BorsaAgent:
                     message_history=message_history,
                     usage=usage,  # Shared usage tracking
                 ),
-                timeout=60.0
+                timeout=300.0
             )
             tasks = task_result.output.tasks
             # Get all messages from planner (includes history + new query + plan)
@@ -461,7 +461,7 @@ class BorsaAgent:
 
                 result = await asyncio.wait_for(
                     self.actor.run(action_prompt, usage=usage),  # Shared usage tracking
-                    timeout=60.0  # MCP tool calls can take longer
+                    timeout=300.0  # MCP tool calls can take longer
                 )
 
                 # Debug: Check what attributes the result has
@@ -573,7 +573,7 @@ class BorsaAgent:
             import sys
             result = await asyncio.wait_for(
                 self.answerer.run(answer_prompt, usage=usage),  # Shared usage tracking
-                timeout=60.0  # 60 second timeout
+                timeout=300.0  # 300 second timeout
             )
 
             # Get LLM answer
@@ -591,7 +591,7 @@ class BorsaAgent:
             return answer, chart
         except asyncio.TimeoutError:
             error_answer = f"""
-❌ Yanıt oluşturma zaman aşımına uğradı (60 saniye).
+❌ Yanıt oluşturma zaman aşımına uğradı (300 saniye).
 
 Toplanan veriler:
 {all_data[:500]}...

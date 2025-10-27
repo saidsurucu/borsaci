@@ -11,7 +11,7 @@ import json
 
 GITHUB_REPO = "saidsurucu/borsaci"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/commits/main"
-GITHUB_API_TIMEOUT = 5  # seconds
+GITHUB_API_TIMEOUT = 300  # seconds
 
 
 def is_git_repo() -> bool:
@@ -53,7 +53,7 @@ def get_local_commit() -> Optional[str]:
             cwd=git_root,
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=300,
         )
 
         if result.returncode == 0:
@@ -93,7 +93,7 @@ def perform_git_pull() -> bool:
             ["git", "fetch", "origin", "main"],
             cwd=git_root,
             capture_output=True,
-            timeout=30,
+            timeout=300,
         )
 
         if result.returncode != 0:
@@ -104,7 +104,7 @@ def perform_git_pull() -> bool:
             ["git", "pull", "origin", "main"],
             cwd=git_root,
             capture_output=True,
-            timeout=30,
+            timeout=300,
         )
 
         return result.returncode == 0
