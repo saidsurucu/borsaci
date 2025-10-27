@@ -2,13 +2,22 @@
 
 import asyncio
 import sys
-import termios
-import tty
 import select
 from typing import TypeVar, Coroutine
 from rich.console import Console
 from rich.live import Live
 from rich.text import Text
+
+# Platform-aware import: termios/tty only available on Unix/Linux/macOS
+try:
+    import termios
+    import tty
+    TERMIOS_AVAILABLE = True
+except ImportError:
+    # Windows or other platforms without termios
+    TERMIOS_AVAILABLE = False
+    termios = None  # type: ignore
+    tty = None  # type: ignore
 
 
 T = TypeVar('T')
@@ -39,7 +48,7 @@ class LoadingAnimation:
 
         frame = self.frames[self.current_frame % len(self.frames)]
         text = Text(f"{self.message}{frame}", style="cyan")
-        if not self._cancelled:
+        if not self._cancelled and TERMIOS_AVAILABLE:
             text.append(" (ESC ile iptal)", style="dim")
         return text
 
@@ -58,7 +67,13 @@ async def check_esc_key() -> bool:
 
     Returns:
         True if ESC was pressed, False otherwise
+
+    Note:
+        Only works on Unix/Linux/macOS. Returns False on Windows.
     """
+    if not TERMIOS_AVAILABLE:
+        return False
+
     try:
         # Check if input is available (non-blocking)
         if select.select([sys.stdin], [], [], 0)[0]:
@@ -80,6 +95,10 @@ async def run_with_loading_and_cancel(
     Uses native terminal handling (termios) to detect ESC key without
     requiring extra permissions (unlike pynput).
 
+    Platform Support:
+        - Unix/Linux/macOS: Full support (ESC cancel + loading animation)
+        - Windows: Partial support (loading animation only, no ESC cancel)
+
     Args:
         coro: Async coroutine to run
         console: Optional Rich console (creates new if None)
@@ -88,7 +107,7 @@ async def run_with_loading_and_cancel(
         Result from coroutine
 
     Raises:
-        asyncio.CancelledError: If user presses ESC
+        asyncio.CancelledError: If user presses ESC (Unix/Linux/macOS only)
 
     Example:
         >>> result = await run_with_loading_and_cancel(agent.run(query))
@@ -99,10 +118,14 @@ async def run_with_loading_and_cancel(
     # Create animation
     animation = LoadingAnimation()
 
-    # Save original terminal settings
+    # Save original terminal settings (only on Unix/Linux/macOS)
     try:
-        old_settings = termios.tcgetattr(sys.stdin)
-        terminal_changed = True
+        if TERMIOS_AVAILABLE and termios is not None:
+            old_settings = termios.tcgetattr(sys.stdin)
+            terminal_changed = True
+        else:
+            terminal_changed = False
+            old_settings = None
     except Exception:
         # stdin not a terminal (e.g., piped input)
         terminal_changed = False
@@ -113,7 +136,7 @@ async def run_with_loading_and_cancel(
 
     try:
         # Set terminal to raw mode if possible (for immediate ESC detection)
-        if terminal_changed:
+        if terminal_changed and tty is not None:
             tty.setraw(sys.stdin.fileno())
 
         # Display loading animation with ESC monitoring
@@ -142,7 +165,7 @@ async def run_with_loading_and_cancel(
 
     finally:
         # Restore terminal settings
-        if terminal_changed and old_settings is not None:
+        if terminal_changed and old_settings is not None and termios is not None:
             try:
                 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
             except Exception:
