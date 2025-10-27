@@ -1,4 +1,4 @@
-# BorsaCI 📊
+# Borsacı 📊
 
 **Türk Finans Piyasaları için AI Agent**
 
@@ -52,11 +52,17 @@ Borsacı, Borsa MCP sunucusunu kullanarak BIST hisseleri, TEFAS fonları, kripto
 
 ### Gereksinimler
 
-- Python 3.11+
-- [uv](https://github.com/astral-sh/uv) package manager
-- OpenRouter API anahtarı ([buradan alın](https://openrouter.ai/keys))
+* **Python Kurulumu:** Sisteminizde Python 3.11 veya üzeri kurulu olmalıdır. Kurulum sırasında "**Add Python to PATH**" (Python'ı PATH'e ekle) seçeneğini işaretlemeyi unutmayın. [Buradan](https://www.python.org/downloads/) indirebilirsiniz.
+* **Git Kurulumu (Windows):** Bilgisayarınıza [git](https://git-scm.com/downloads/win) yazılımını indirip kurun. "Git for Windows/x64 Setup" seçeneğini indirmelisiniz.
+* **`uv` Kurulumu:**
+    * **Windows Kullanıcıları (PowerShell):** Bir CMD ekranı açın ve bu kodu çalıştırın: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+    * **Mac/Linux Kullanıcıları (Terminal):** Bir Terminal ekranı açın ve bu kodu çalıştırın: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+* **Microsoft Visual C++ Redistributable (Windows):** Bazı Python paketlerinin doğru çalışması için gereklidir. [Buradan](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) indirip kurun.
+* OpenRouter API anahtarı ([buradan alın](https://openrouter.ai/keys))
 
 ### Adım Adım
+
+Terminal/CMD ekranını açın.
 
 ```bash
 # 1. Repository'i klonlayın
@@ -110,7 +116,7 @@ Borsacı ilk kez çalıştırıldığında API key'inizi soracaktır:
 $ uv run borsaci
 
 ╔══════════════════════════════════════════════════════════╗
-║                     BORSACI                             ║
+║                     BORSACI                              ║
 ╚══════════════════════════════════════════════════════════╝
 
 ⚠️  Uyarı: OPENROUTER_API_KEY bulunamadı!
