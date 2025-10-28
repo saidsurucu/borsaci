@@ -1,5 +1,7 @@
 # Borsacı 📊
 
+[![Star History Chart](https://api.star-history.com/svg?repos=saidsurucu/borsaci&type=date&legend=top-left)](https://www.star-history.com/#saidsurucu/borsaci&type=date&legend=top-left)
+
 **Türk Finans Piyasaları için AI Agent**
 
 > 🔬 **Araştırma Projesi** | 📚 **Eğitim Amaçlı** | ⚠️ **Yatırım Tavsiyesi Değildir**
