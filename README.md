@@ -71,6 +71,9 @@ Terminal/CMD ekranını açın.
 git clone https://github.com/saidsurucu/borsaci.git
 cd borsaci
 
+# Daha önce indirildiyse güncelleme için
+git pull
+
 # 2. Dependencies'i yükleyin
 uv sync
 
