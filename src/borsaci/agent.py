@@ -330,6 +330,38 @@ class BorsaAgent:
                 answer = base_result.output.answer or base_result.output.reasoning
                 return answer, None, base_result.all_messages()
 
+            # Warren Buffett analysis? Route to BuffettAgent
+            if base_result.output.is_buffett and base_result.output.confidence > 0.7:
+                print(f"💼 Warren Buffett analizi (güven: {base_result.output.confidence:.0%}) - BuffettAgent başlatılıyor...")
+
+                from .buffett_agent import BuffettAgent
+
+                # Create BuffettAgent
+                buffett = BuffettAgent(mcp_client=self.mcp)
+
+                try:
+                    # Run Buffett analysis (returns markdown report directly)
+                    answer = await buffett.analyze(query, usage=usage)
+
+                    # Create final response message
+                    final_message = ModelResponse(
+                        parts=[TextPart(content=answer)],
+                        timestamp=datetime.now(),
+                    )
+
+                    # Return answer, no chart, and messages
+                    all_messages = base_result.all_messages() + [final_message]
+                    return answer, None, all_messages
+
+                except Exception as e:
+                    if "--debug" in sys.argv:
+                        print(f"[DEBUG] BuffettAgent error: {e}")
+                        import traceback
+                        traceback.print_exc()
+
+                    # Fallback to normal workflow on error
+                    print(f"⚠️  BuffettAgent hatası, normal planlama workflow'una devam ediliyor...")
+
             # Complex query: Proceed to multi-agent workflow
             print(f"🔧 Karmaşık sorgu (güven: {base_result.output.confidence:.0%}) - planlama başlatılıyor...")
 

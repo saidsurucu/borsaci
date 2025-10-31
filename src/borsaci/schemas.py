@@ -61,6 +61,68 @@ class OptimizedToolArgs(BaseModel):
 class BaseResponse(BaseModel):
     """Base agent routing decision - determines if query needs multi-agent workflow"""
     is_simple: bool = Field(..., description="Can be answered without MCP tools or planning")
+    is_buffett: bool = Field(default=False, description="Requires Warren Buffett investment analysis")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in this routing decision")
     answer: Optional[str] = Field(None, description="Direct answer if simple (only if is_simple=True)")
     reasoning: str = Field(..., description="Explanation of why query is simple or complex")
+
+
+class BuffettAnalysisResponse(BaseModel):
+    """Warren Buffett style investment analysis result"""
+    ticker: str = Field(..., description="Stock ticker symbol (e.g., ASELS)")
+    company_name: str = Field(..., description="Company name in Turkish")
+
+    # 1. Competence Circle (Yeterlilik Dairesi)
+    yeterlilik_dairesi: dict = Field(
+        ...,
+        description="Competence circle assessment: {'anlaşılıyor': bool, 'güven': float, 'açıklama': str}"
+    )
+
+    # 2. Moat (Rekabet Avantajı)
+    rekabet_avantaji: dict = Field(
+        ...,
+        description="Competitive moat: {'moat_kalitesi': str, 'sürdürülebilirlik': int, 'açıklama': str}"
+    )
+
+    # 3. Owner Earnings (Sahip Kazançları)
+    sahip_kazanclari: dict = Field(
+        ...,
+        description="Owner earnings calculation: {'hesaplama': dict, 'getiri': float, 'açıklama': str}"
+    )
+
+    # 4. Intrinsic Value & Safety Margin (İçsel Değer & Güvenlik Marjı)
+    guvenlik_marji: dict = Field(
+        ...,
+        description="Safety margin: {'icsel_deger': float, 'mevcut_fiyat': float, 'indirim': float}"
+    )
+
+    # 5. Decision (Karar)
+    karar: str = Field(
+        ...,
+        description="Investment decision: 'SATIN AL' | 'PAS' | 'İZLE'"
+    )
+
+    pozisyon_onerisi: Optional[str] = Field(
+        None,
+        description="Position sizing recommendation (e.g., 'Portföyün %10-25'i')"
+    )
+
+    # Metadata
+    uyarilar: list[str] = Field(
+        default_factory=list,
+        description="Risk warnings and disclaimers"
+    )
+    veri_kaynaklari: list[str] = Field(
+        default_factory=list,
+        description="Data sources used (MCP tools)"
+    )
+    raw_data: str = Field(
+        default="",
+        description="Raw collected data for debugging"
+    )
+    confidence: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Overall confidence in this analysis"
+    )

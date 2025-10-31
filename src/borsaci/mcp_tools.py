@@ -20,7 +20,7 @@ class BorsaMCP(MCPServerStreamableHTTP):
     as a toolset with PydanticAI agents.
     """
 
-    def __init__(self, server_url: Optional[str] = None, timeout: float = 30.0):
+    def __init__(self, server_url: Optional[str] = None, timeout: float = 30.0, process_tool_call=None):
         """
         Initialize Borsa MCP client.
 
@@ -28,6 +28,7 @@ class BorsaMCP(MCPServerStreamableHTTP):
             server_url: MCP server URL.
                        Defaults to BORSA_MCP_URL env var or hosted server at borsamcp.fastmcp.app
             timeout: Connection timeout in seconds (default: 30.0)
+            process_tool_call: Optional callback to process tool calls (for progress messages)
         """
         if server_url is None:
             # Check environment variable first
@@ -37,8 +38,8 @@ class BorsaMCP(MCPServerStreamableHTTP):
             # Use hosted FastMCP server as default
             server_url = "https://borsamcp.fastmcp.app/mcp"
 
-        # Initialize parent MCPServerStreamableHTTP with timeout
-        super().__init__(server_url, timeout=timeout)
+        # Initialize parent MCPServerStreamableHTTP with timeout and process_tool_call
+        super().__init__(server_url, timeout=timeout, process_tool_call=process_tool_call)
 
         self.server_url = server_url
         self.tools_cache = []

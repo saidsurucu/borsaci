@@ -45,6 +45,17 @@ def get_answer_model() -> str:
     return "openrouter:google/gemini-2.5-flash-preview-09-2025"
 
 
+def get_buffett_model() -> str:
+    """
+    Get OpenRouter model for Warren Buffett Agent.
+
+    Returns:
+        Gemini 2.5 Flash Preview (default) - Fast analysis with good quality
+        Can be overridden via BUFFETT_MODEL env variable for Pro model
+    """
+    return os.getenv("BUFFETT_MODEL", "openrouter:google/gemini-2.5-flash-preview-09-2025")
+
+
 def create_agent(
     model: str,
     system_prompt: str,
