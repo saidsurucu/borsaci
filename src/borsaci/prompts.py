@@ -1260,6 +1260,7 @@ company_name: "ASELSAN Elektronik Sanayi ve Ticaret A.Ş."
 buffett_analysis:
   # Owner Earnings
   owner_earnings:
+    # Pozitif senaryo (normal durum):
     oe_quarterly: 700.0           # Milyon TL (çeyreklik)
     oe_annual: 2800.0             # Milyon TL (yıllık = quarterly × 4)
     net_income: 1000.0
@@ -1267,6 +1268,14 @@ buffett_analysis:
     capex: -250.0
     wc_change: -10.0
     notes: "OE hesaplama detayları..."
+
+    # Negatif senaryo örneği (sermaye yiyen şirket - MCP tool böyle dönerse):
+    # oe_quarterly: -500.0        # NEGATİF - CapEx > Net Income
+    # oe_annual: -2000.0          # Yıllık negatif
+    # net_income: 800.0
+    # capex: -1500.0              # CapEx çok yüksek
+    # notes: "Negatif OE: Şirket operasyonları için kârından fazla yatırım yapıyor"
+    # ⚠️ NEGATİF DEĞER VARSA null YAZMA, gerçek negatif sayıyı yaz!
 
   # OE Yield
   oe_yield:
@@ -1320,6 +1329,9 @@ data_date: "{get_current_date}"
 ÖNEMLİ:
 - calculate_buffett_value_analysis tool'undan gelen JSON response'ı YAML'e çevir
 - Sayıları AYNEN kopyala (tool'dan gelen değerler)
+- ⚠️ NEGATİF DEĞERLER: Eğer MCP tool negatif değer döndürüyorsa, null YERİNE gerçek negatif değeri yaz!
+  Örnek: oe_quarterly: -500.0 (NEGATİF - sermaye yiyen durum)
+- ⚠️ HATA DURUMUNDA: MCP tool hata mesajı döndürse bile, varsa gerçek sayıları (negatif bile olsa) YAML'e ekle
 - Hierarchy'yi koru (buffett_analysis altında 4 section)
 - YAML formatına uy (Python parse edecek)
 
