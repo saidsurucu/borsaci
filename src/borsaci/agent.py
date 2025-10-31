@@ -19,7 +19,7 @@ from .model import (
     create_base_agent,
     get_answer_model,
 )
-from .schemas import TaskList, IsDone, Answer, Task, BaseResponse
+from .schemas import TaskList, IsDone, Task, BaseResponse
 from .prompts import (
     BASE_AGENT_PROMPT,
     PLANNING_PROMPT,
@@ -29,11 +29,7 @@ from .prompts import (
 )
 from .mcp_tools import BorsaMCP, get_mcp_client
 from .utils.charts import (
-    create_candlestick_chart,
     create_candlestick_from_json,
-    create_comparison_bar_chart,
-    create_multi_line_chart,
-    create_histogram,
 )
 
 
@@ -360,7 +356,7 @@ class BorsaAgent:
                         traceback.print_exc()
 
                     # Fallback to normal workflow on error
-                    print(f"⚠️  BuffettAgent hatası, normal planlama workflow'una devam ediliyor...")
+                    print("⚠️  BuffettAgent hatası, normal planlama workflow'una devam ediliyor...")
 
             # Complex query: Proceed to multi-agent workflow
             print(f"🔧 Karmaşık sorgu (güven: {base_result.output.confidence:.0%}) - planlama başlatılıyor...")
@@ -520,7 +516,7 @@ class BorsaAgent:
                     print(f"   ✓ Veri toplandı ({len(str(tool_result))} karakter)")
 
             except asyncio.TimeoutError:
-                print(f"   ⚠️  İşlem zaman aşımına uğradı")
+                print("   ⚠️  İşlem zaman aşımına uğradı")
                 outputs.append("İşlem zaman aşımına uğradı")
                 break
 
@@ -537,7 +533,7 @@ class BorsaAgent:
                 break
 
             if iteration == self.max_steps_per_task - 1:
-                print(f"   ⚠️  Maksimum deneme sayısına ulaşıldı")
+                print("   ⚠️  Maksimum deneme sayısına ulaşıldı")
 
         return outputs
 
@@ -604,7 +600,6 @@ class BorsaAgent:
         try:
             # Add timeout to prevent indefinite hanging
             import asyncio
-            import sys
             result = await asyncio.wait_for(
                 self.answerer.run(answer_prompt, usage=usage),  # Shared usage tracking
                 timeout=300.0  # 300 second timeout
@@ -662,9 +657,9 @@ Toplanan veriler:
 
             # Debug: Show what we received
             if "--debug" in sys.argv:
-                print(f"\n[DEBUG] Chart data (first 1000 chars):")
+                print("\n[DEBUG] Chart data (first 1000 chars):")
                 print(data[:1000])
-                print(f"\n[DEBUG] Looking for JSON array...")
+                print("\n[DEBUG] Looking for JSON array...")
 
             # Try JSON first
             json_match = re.search(r'\[\s*\{[^}]*"date"[^}]*"open"[^}]*"high"[^}]*"low"[^}]*"close"[^}]*\}[^\]]*\]', data, re.DOTALL | re.IGNORECASE)
@@ -683,7 +678,7 @@ Toplanan veriler:
 
             # Fallback: Parse markdown table
             if "--debug" in sys.argv:
-                print(f"[DEBUG] No JSON found, trying markdown table parse...")
+                print("[DEBUG] No JSON found, trying markdown table parse...")
 
             # Try both date formats and column orders since LLM output varies
             # Format 1: YYYY-MM-DD with Open | High | Low | Close
@@ -744,7 +739,7 @@ Toplanan veriler:
                 return chart
 
             if "--debug" in sys.argv:
-                print(f"[DEBUG] No parseable data found")
+                print("[DEBUG] No parseable data found")
 
             return None
 

@@ -67,11 +67,11 @@ def write_openrouter_key_to_env(api_key: str):
         else:
             # No template, create minimal .env
             with open(env_path, "w", encoding="utf-8") as f:
-                f.write(f"# BorsaCI Environment Variables\n")
+                f.write("# BorsaCI Environment Variables\n")
                 f.write(f"OPENROUTER_API_KEY={api_key}\n")
-                f.write(f"\n# Optional: OpenRouter app info\n")
-                f.write(f"# HTTP_REFERER=https://borsaci.app\n")
-                f.write(f"# X_TITLE=BorsaCI\n")
+                f.write("\n# Optional: OpenRouter app info\n")
+                f.write("# HTTP_REFERER=https://borsaci.app\n")
+                f.write("# X_TITLE=BorsaCI\n")
 
 
 async def check_and_setup_openrouter_key(logger: Logger) -> bool:

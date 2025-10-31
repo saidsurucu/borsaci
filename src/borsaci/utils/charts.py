@@ -1,7 +1,7 @@
 """Terminal chart utilities using plotext for financial visualizations"""
 
 import plotext as plt
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 import json
 
 

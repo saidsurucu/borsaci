@@ -2,7 +2,6 @@
 
 from typing import Optional, Any
 import os
-import json
 import sys
 
 from pydantic_ai import Agent, RunContext
@@ -10,7 +9,6 @@ from pydantic_ai.usage import RunUsage
 from pydantic_ai.mcp import CallToolFunc, ToolResult
 
 from .model import get_action_model
-from .schemas import BuffettAnalysisResponse
 from .prompts import get_warren_buffett_prompt, get_data_collection_prompt
 from .mcp_tools import BorsaMCP
 from .utils.logger import Logger
@@ -156,7 +154,7 @@ class BuffettAgent:
             # PHASE 1: DATA COLLECTION
             # ==========================================
             if "--debug" in sys.argv:
-                print(f"[DEBUG] Phase 1: Collecting financial data...")
+                print("[DEBUG] Phase 1: Collecting financial data...")
 
             data_collection_prompt = f"""
 Kullanıcı Sorusu: {query}
@@ -175,7 +173,7 @@ Tüm gerekli MCP araçlarını kullan (search, profile, financials, price).
 
             if "--debug" in sys.argv:
                 print(f"[DEBUG] Phase 1 completed. Data length: {len(collected_data)} chars")
-                print(f"[DEBUG] Full collected data:")
+                print("[DEBUG] Full collected data:")
                 print("=" * 80)
                 print(collected_data)
                 print("=" * 80)
@@ -188,7 +186,7 @@ Tüm gerekli MCP araçlarını kullan (search, profile, financials, price).
             # PHASE 2: ANALYSIS
             # ==========================================
             if "--debug" in sys.argv:
-                print(f"[DEBUG] Phase 2: Analyzing collected data with Buffett framework...")
+                print("[DEBUG] Phase 2: Analyzing collected data with Buffett framework...")
 
             analysis_prompt = f"""
 Aşağıdaki finansal veriler ve Python hesaplamaları toplandı:
@@ -255,7 +253,7 @@ GÖREV ADIMLARI:
             )
 
             if "--debug" in sys.argv:
-                print(f"[DEBUG] Phase 2 completed")
+                print("[DEBUG] Phase 2 completed")
                 print(f"[DEBUG] Analysis length: {len(analysis_result.output)} chars")
 
             return analysis_result.output
