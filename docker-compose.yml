@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+    borsaci:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: borsaci
+        stdin_open: true
+        tty: true
+        environment:
+            - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+            - HTTP_REFERER=${HTTP_REFERER:-https://borsaci.app}
+            - X_TITLE=${X_TITLE:-BorsaCI}
+            - BORSA_MCP_URL=${BORSA_MCP_URL:-https://borsamcp.fastmcp.app/mcp}
+            - MAX_STEPS=${MAX_STEPS:-20}
+            - MAX_STEPS_PER_TASK=${MAX_STEPS_PER_TASK:-5}
+            - PARALLEL_EXECUTION=${PARALLEL_EXECUTION:-true}
+        volumes:
+            - ./.env:/app/.env:ro
+        restart: unless-stopped
+        network_mode: bridge

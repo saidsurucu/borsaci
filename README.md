@@ -52,7 +52,29 @@ Borsacı, Borsa MCP sunucusunu kullanarak BIST hisseleri, TEFAS fonları, kripto
 
 ## 🚀 Kurulum
 
-### Gereksinimler
+### 🐳 Docker ile Kurulum (Önerilen)
+
+Docker kullanarak BorsaCI'yi hızlıca çalıştırabilirsiniz:
+
+```bash
+# 1. Repository'i klonlayın
+git clone https://github.com/saidsurucu/borsaci.git
+cd borsaci
+
+# 2. .env dosyası oluşturun
+cat > .env << EOF
+OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+EOF
+
+# 3. Docker Compose ile çalıştırın
+docker-compose run --rm borsaci
+```
+
+**Detaylı Docker kullanım kılavuzu için**: [DOCKER.md](DOCKER.md)
+
+### Manuel Kurulum
+
+#### Gereksinimler
 
 * **Python Kurulumu:** Sisteminizde Python 3.11 veya üzeri kurulu olmalıdır. Kurulum sırasında "**Add Python to PATH**" (Python'ı PATH'e ekle) seçeneğini işaretlemeyi unutmayın. [Buradan](https://www.python.org/downloads/) indirebilirsiniz.
 * **Git Kurulumu (Windows):** Bilgisayarınıza [git](https://git-scm.com/downloads/win) yazılımını indirip kurun. "Git for Windows/x64 Setup" seçeneğini indirmelisiniz.
@@ -62,7 +84,7 @@ Borsacı, Borsa MCP sunucusunu kullanarak BIST hisseleri, TEFAS fonları, kripto
 * **Microsoft Visual C++ Redistributable (Windows):** Bazı Python paketlerinin doğru çalışması için gereklidir. [Buradan](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) indirip kurun.
 * OpenRouter kredisi satın alın ve API anahtarı oluşturun ([API anahtarı](https://openrouter.ai/keys))
 
-### Adım Adım
+#### Adım Adım
 
 Terminal/CMD ekranını açın.
 
@@ -84,7 +106,7 @@ uv run borsaci
 
 **Not:** CLI ilk çalıştırmada `OPENROUTER_API_KEY` bulamazsa sizden isteyecek ve otomatik olarak `.env` dosyasına kaydedecektir. Manuel kurulum yapmanıza gerek yok!
 
-### Environment Variables (.env)
+#### Environment Variables (.env)
 
 ```bash
 # Zorunlu
