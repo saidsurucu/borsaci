@@ -38,6 +38,13 @@ from .mcp_tools import BorsaMCP, get_mcp_client
 from .utils.charts import (
     create_candlestick_from_json,
 )
+from .quant_alpha import (
+    BacktestResult,
+    create_equity_curve_chart,
+    extract_ohlcv_from_text,
+    format_backtest_report,
+    run_bist_alpha_backtest,
+)
 
 
 class BorsaAgent:
@@ -664,6 +671,9 @@ class BorsaAgent:
             - chart: Optional plotext chart (ANSI string) if graph requested
         """
         all_data = "\n\n".join(session_outputs) if session_outputs else "Veri toplanamadı."
+        quant_result = self._run_quant_alpha_if_requested(query, all_data)
+        if quant_result:
+            all_data = f"{all_data}\n\n{format_backtest_report(quant_result)}"
 
         answer_prompt = f"""
         Kullanıcı Sorusu: {query}
@@ -690,7 +700,9 @@ class BorsaAgent:
             chart_keywords = ['grafik', 'mum grafik', 'candlestick', 'chart', 'plot', 'görselleştir']
             needs_chart = any(keyword in query.lower() for keyword in chart_keywords)
 
-            if needs_chart and session_outputs:
+            if quant_result:
+                chart = create_equity_curve_chart(quant_result)
+            elif needs_chart and session_outputs:
                 # Try to create chart from collected data
                 chart = self._create_chart_from_data(all_data, query)
 
@@ -715,6 +727,42 @@ Toplanan veriler:
 ⚠️ Bu bilgiler sadece bilgilendirme amaçlıdır. Yatırım tavsiyesi değildir.
 """
             return error_answer, None
+
+    def _run_quant_alpha_if_requested(self, query: str, data: str) -> Optional[BacktestResult]:
+        """
+        Run deterministic quant alpha analysis when the user asks for alpha,
+        algorithmic trading, ICT, prediction, or backtesting.
+        """
+        query_lower = query.lower()
+        keywords = [
+            "alpha",
+            "backtest",
+            "algoritmik",
+            "quant",
+            "kantitatif",
+            "ict",
+            "tahmin",
+            "prediction",
+        ]
+        if not any(keyword in query_lower for keyword in keywords):
+            return None
+
+        bars = extract_ohlcv_from_text(data)
+        if not bars:
+            return None
+
+        ticker = self._extract_ticker_from_query(query)
+        return run_bist_alpha_backtest(bars, ticker=ticker)
+
+    def _extract_ticker_from_query(self, query: str) -> str:
+        """Extract a likely BIST ticker from the user query."""
+        import re
+
+        ignored = {"BIST", "ICT", "RSI", "MACD", "FVG"}
+        for match in re.findall(r"\b[A-ZÇĞİÖŞÜ]{4,6}\b", query.upper()):
+            if match not in ignored:
+                return match
+        return "BIST"
 
     def _create_chart_from_data(self, data: str, query: str) -> Optional[str]:
         """
