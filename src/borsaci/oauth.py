@@ -90,6 +90,15 @@ def extract_from_gemini_cli() -> Optional[Tuple[str, Optional[str]]]:
             if result:
                 return result
 
+        # Modern Gemini CLI ships as bundled chunks (bundle/*.js) with named
+        # OAUTH_CLIENT_ID / OAUTH_CLIENT_SECRET constants
+        bundle_dir = gemini_dir / "bundle"
+        if bundle_dir.exists():
+            for chunk in sorted(bundle_dir.glob("*.js")):
+                result = _extract_credentials_from_bundle(chunk)
+                if result:
+                    return result
+
         # Recursive search as fallback (max 10 levels deep - OpenClaw pattern)
         for oauth_js in _find_oauth_files(gemini_dir, max_depth=10):
             result = _extract_credentials_from_file(oauth_js)
@@ -124,6 +133,25 @@ def _extract_credentials_from_file(file_path: Path) -> Optional[Tuple[str, Optio
             client_id = client_id_match.group(1)
             client_secret = client_secret_match.group(1) if client_secret_match else None
             return (client_id, client_secret)
+    except Exception:
+        pass
+    return None
+
+
+def _extract_credentials_from_bundle(file_path: Path) -> Optional[Tuple[str, Optional[str]]]:
+    """
+    Extract OAuth client ID/secret from a bundled Gemini CLI chunk file
+    using the named constants (OAUTH_CLIENT_ID / OAUTH_CLIENT_SECRET).
+    """
+    if not file_path.exists():
+        return None
+    try:
+        content = file_path.read_text(errors="ignore")
+        id_match = re.search(r'OAUTH_CLIENT_ID\s*=\s*["\']([^"\']+)["\']', content)
+        if not id_match:
+            return None
+        secret_match = re.search(r'OAUTH_CLIENT_SECRET\s*=\s*["\']([^"\']+)["\']', content)
+        return (id_match.group(1), secret_match.group(1) if secret_match else None)
     except Exception:
         pass
     return None

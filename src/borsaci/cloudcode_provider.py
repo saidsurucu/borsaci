@@ -137,6 +137,10 @@ class CloudCodeClient:
             )
 
             if not project_id:
+                # Account not onboarded yet - provision a managed project
+                project_id = await self._onboard_user(payload["metadata"])
+
+            if not project_id:
                 raise Exception(f"No project ID in response: {data}")
 
             self._project = CloudCodeProject(
@@ -144,6 +148,31 @@ class CloudCodeClient:
                 display_name=data.get("displayName"),
             )
             return self._project
+
+    async def _onboard_user(self, metadata: dict) -> Optional[str]:
+        """
+        Call onboardUser to provision a managed Code Assist project.
+
+        Required for accounts that have never used Gemini CLI / Code Assist.
+        The endpoint is a long-running operation; polled by re-posting until done.
+        """
+        access_token = await self._get_access_token()
+        session = await self._get_session()
+        url = f"{self._endpoint}:onboardUser"
+        headers = self._get_headers(access_token)
+        payload = {"tierId": "free-tier", "metadata": metadata}
+
+        for _ in range(10):
+            async with session.post(url, headers=headers, json=payload) as resp:
+                if resp.status != 200:
+                    text = await resp.text()
+                    raise Exception(f"onboardUser failed ({resp.status}): {text}")
+                data = await resp.json()
+                if data.get("done"):
+                    project = (data.get("response") or {}).get("cloudaicompanionProject") or {}
+                    return project.get("id")
+            await asyncio.sleep(2)
+        return None
 
     async def generate_content(
         self,
@@ -193,7 +222,7 @@ class CloudCodeClient:
         }
 
         # Retry logic for rate limiting (429 errors)
-        max_retries = 5
+        max_retries = 8
         for attempt in range(max_retries):
             async with session.post(url, headers=headers, json=payload) as resp:
                 if resp.status == 429:
@@ -213,6 +242,10 @@ class CloudCodeClient:
                                 break
                     except:
                         retry_delay = 1.0
+
+                    # Advertised retryDelay is often shorter than the real
+                    # throttle window on free tier - enforce exponential floor
+                    retry_delay = min(max(retry_delay, 2.0 * (2 ** attempt)), 45.0)
 
                     if attempt < max_retries - 1:
                         await asyncio.sleep(retry_delay + 0.1)  # Add small buffer
