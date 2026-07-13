@@ -9,7 +9,7 @@ description = "Türk finans piyasaları için AI agent - BIST, TEFAS, Kripto ve 
 authors = [{name = "Said Surucu"}]
 requires-python = ">=3.11"
 dependencies = [
-    "pydantic-ai>=0.0.14",
+    "pydantic-ai>=1.5,<2",
     "fastmcp>=2.11.0",
     "prompt-toolkit>=3.0.0",
     "python-dotenv>=1.1.1",
