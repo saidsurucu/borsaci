@@ -12,7 +12,8 @@ Borsacı, Borsa MCP sunucusunu kullanarak BIST hisseleri, TEFAS fonları, kripto
 
 ## 🌟 Özellikler
 
-- **43 Finansal Araç**: Borsa MCP ile entegre tam kapsamlı piyasa erişimi
+- **23 Finansal Araç**: Borsa MCP Unified API ile tam kapsamlı piyasa erişimi
+- **Claude Skill**: Python'sız, model-agnostik kullanım için `skill/borsaci/` ([aşağıda](#-claude-skill-pythonsız-alternatif))
 - **Multi-Agent Architecture**: Görev planlama, yürütme, doğrulama ve yanıt sentezleme
 - **Paralel Görev Yürütme**: Dependency-aware parallelization ile 50-70% performans artışı
 - **Terminal Chart Visualization**: plotext ile renkli candlestick (mum) grafikleri
@@ -50,6 +51,32 @@ Borsacı, Borsa MCP sunucusunu kullanarak BIST hisseleri, TEFAS fonları, kripto
 - Emtia fiyatları (altın, petrol, gümüş)
 - TCMB enflasyon verileri (TÜFE, ÜFE)
 - Ekonomik takvim (30+ ülke)
+
+## 🧩 Claude Skill (Python'sız Alternatif)
+
+Borsacı'nın piyasa uzmanlığı, `skill/borsaci/` altında **saf markdown bir Claude Skill** olarak da
+paketlenmiştir. Kod, LLM sağlayıcısı veya API anahtarı gerektirmez — modelin kendisi (Claude Code,
+claude.ai veya skill + MCP destekleyen herhangi bir ajan) Borsa MCP araçlarını doğrudan kullanır.
+
+```bash
+# 1. Borsa MCP'yi ekle (skill'in tek veri kaynağı)
+claude mcp add --transport http borsa https://borsa.surucu.dev/mcp
+
+# 2. Skill'i kur
+cp -r skill/borsaci ~/.claude/skills/
+```
+
+Sonrasında "ASELS son fiyatı", "GARAN'ı buffett gibi analiz et", "altın mı BIST mi kazandırdı"
+gibi sorular skill'i tetikler.
+
+| | Python uygulaması (`uv run borsaci`) | Claude Skill (`skill/borsaci/`) |
+|---|---|---|
+| Çalıştırma | Kendi ajan döngüsü (PydanticAI) | Host ajanın kendi döngüsü |
+| Model | Gemini 3 (Google OAuth / OpenRouter) | Host'un modeli, model-agnostik |
+| Kurulum | Python + uv + kimlik doğrulama | Klasörü kopyala |
+| Grafik | Terminalde plotext mum grafiği | OHLC tablosu + ortam destekliyorsa görsel |
+
+İkisi bağımsızdır ve senkron tutulmaz. Ayrıntılar: [`skill/borsaci/README.md`](skill/borsaci/README.md)
 
 ## 🚀 Kurulum
 
