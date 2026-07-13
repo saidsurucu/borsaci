@@ -42,7 +42,7 @@ cp -r skill/borsaci ~/.claude/skills/
 | Dosya | İçerik |
 |---|---|
 | `SKILL.md` | Tetikleme, preflight, yönlendirme, yürütme sözleşmesi, cevap formatı |
-| `references/tools.md` | 28 Borsa MCP aracının kataloğu ve parametreleri |
+| `references/tools.md` | 23 Borsa MCP aracının kataloğu ve parametreleri |
 | `references/planning.md` | Atomik görev, `depends_on`, paralellik kuralları |
 | `references/buffett.md` | Buffett veri sözleşmesi ve tek otoriter karar tablosu |
 
@@ -50,8 +50,22 @@ Referans dosyaları yalnızca gerektiğinde okunur (progressive disclosure).
 
 ## Sürüm ve Uyumluluk
 
-- Skill sürümü: **0.1.0**
-- Borsa MCP: Unified API, **28 araç** (canlı şemaya karşı doğrulandı: 12.07.2026)
+- Skill sürümü: **0.2.0**
+- Borsa MCP: Unified API, **23 araç** (canlı şemaya karşı doğrulandı: 12.07.2026)
+
+### 0.2.0 — Sunucu konsolidasyonu (28 → 23 araç)
+
+| Kaldırılan | Yerine |
+|---|---|
+| `get_quick_info` | `get_quote` (hisse + döviz + maden + kripto, tek araç) |
+| `get_fx_data` | `get_quote(market="fx")` · geçmiş için `get_historical_data(market="fx")` |
+| `get_pivot_points` | `get_technical_analysis(include_pivots=true)` |
+| `get_dividends` | `get_corporate_actions` (temettü + bölünme + sermaye artırımı) |
+| `get_regulations` | `get_fund_data(data_type="regulations")` |
+| `get_screener_help` / `get_scanner_help` | `screen_securities(help=true)` / `scan_stocks(help=true)` |
+
+Yeni: **`compare_assets`** — BIST/ABD hissesi, altın, döviz, kripto ve TEFAS fonunun dönem
+getirisini tek tabloda, TRY ve USD cinsinden karşılaştırır.
 
 ## Bu skill ile `src/borsaci/` ilişkisi
 

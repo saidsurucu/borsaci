@@ -5,11 +5,11 @@ description: BIST/Borsa İstanbul hisseleri ve endeksleri, TEFAS fonları, Türk
 
 # BorsaCI — Türk Finans Piyasaları Analizi
 
-**Skill sürümü:** 0.1.0 · **Gerektirir:** Borsa MCP (`https://borsa.surucu.dev/mcp`, 28 araç)
+**Skill sürümü:** 0.2.0 · **Gerektirir:** Borsa MCP (`https://borsa.surucu.dev/mcp`, 23 araç)
 
 ## 0. Preflight
 
-Borsa MCP araçları (`search_symbol`, `get_quick_info`, …) yüklü değilse **DUR.**
+Borsa MCP araçları (`search_symbol`, `get_quote`, …) yüklü değilse **DUR.**
 Kullanıcıya kurulumun gerektiğini söyle (bkz. README.md) ve devam etme.
 
 Fiyat, oran veya finansal veriyi **model bilgisinden uydurma.** Bu skill'in tek veri kaynağı
@@ -31,8 +31,11 @@ Her soruyu üç yoldan birine ayır.
 Güncel fiyat, oran, finansal tablo, KAP haberi, tarama, karşılaştırma, grafik.
 
 - Tek adımlıysa doğrudan aracı çağır.
-- Çok adımlı / karşılaştırmalı / birden fazla varlık içeriyorsa → **önce görev listesi çıkar**:
+- Çok adımlı / birden fazla varlık içeriyorsa → **önce görev listesi çıkar**:
   `references/planning.md` oku.
+- **Dönem getirisi karşılaştırması** ("altın mı hisse mi kazandırdı?", "şu tarihten beri X vs Y")
+  → `compare_assets`. Farklı varlık sınıflarını tek tabloda, TRY ve USD cinsinden verir;
+  fiyatları tek tek çekip **elle hesaplama.**
 - Araç seçiminde veya parametrede tereddüt varsa → `references/tools.md` oku.
 
 ### C. Buffett akışı
@@ -76,7 +79,7 @@ Konuşmada olmayan bir analize atıfta bulunma.
 Tetikleyiciler: "grafik", "mum grafik", "candlestick", "chart", "görselleştir".
 
 1. Veriyi çek: BIST → `get_historical_data`; kripto → `get_crypto_market(data_type="ohlc")`;
-   döviz/emtia → `get_fx_data(data_type="historical")`.
+   döviz/altın/emtia → `get_historical_data(market="fx")`.
 2. **Her koşulda üret:** OHLC markdown tablosu + dönem + as-of tarihi + kısa trend özeti.
    Bu, garantili çıktıdır.
 3. Görsel grafiği **yalnızca** ortamın grafik/artifact/kod çalıştırma yeteneği varsa ve

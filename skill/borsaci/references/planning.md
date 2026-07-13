@@ -9,9 +9,12 @@ Her görev: `id`, Türkçe açıklama, kullanılacak araç, `depends_on` (bağl�
 
 | id | Görev | Araç | depends_on |
 |----|-------|------|-----------|
-| 1 | ASELS güncel fiyat ve metrikleri | `get_quick_info` | — |
-| 2 | THYAO güncel fiyat ve metrikleri | `get_quick_info` | — |
-| 3 | İkisini karşılaştır | (araç yok, analiz) | 1, 2 |
+| 1 | ASELS teknik analizi | `get_technical_analysis` | — |
+| 2 | ASELS analist hedef fiyatları | `get_analyst_data` | — |
+| 3 | İkisini birlikte yorumla | (araç yok, analiz) | 1, 2 |
+
+> Aynı veriyi birden çok sembol için istiyorsan **görev çoğaltma** — çoğu araç 10 sembole kadar
+> toplu çağrıyı destekler: `get_quote(symbol=["ASELS","THYAO","GARAN"], market="bist")` tek görevdir.
 
 ## Kurallar
 
@@ -34,19 +37,33 @@ Her görev: `id`, Türkçe açıklama, kullanılacak araç, `depends_on` (bağl�
 6. **Kapsam dışıysa görev üretme.** Soru Türk finans piyasalarıyla ilgili değilse plan yapma,
    kapsam dışı olduğunu söyle.
 
+## Önce toplu çağrıyı düşün
+
+Aynı aracın aynı `market` değeriyle birden çok sembol istediği durumda **görev çoğaltma**:
+`get_quote`, `get_profile`, `get_financial_ratios`, `get_technical_analysis`,
+`get_corporate_actions`, `get_analyst_data`, `get_earnings`, `get_financial_statements`
+10 sembole kadar toplu çağrıyı destekler.
+
+- ✅ Tek görev: `get_quote(symbol=["ASELS","THYAO","GARAN"], market="bist")`
+- ❌ Üç ayrı görev: "ASELS fiyatı", "THYAO fiyatı", "GARAN fiyatı"
+
+Farklı varlık sınıflarının **dönem getirisini** karşılaştırıyorsan tek araç yeter:
+`compare_assets(assets=["ASELS","gram-altin","USD"], start_date=…)`.
+
 ## Paralel-Güvenli Örnekler (`depends_on: []`)
 
-- Farklı hisselerin aynı verisi: "ASELS fiyatı", "THYAO fiyatı", "GARAN fiyatı"
-- Farklı varlık sınıfları: "Altın fiyatı", "Dolar kuru", "BIST100 endeksi"
-- Aynı şirketin farklı veri türleri: "ASELS finansalları", "ASELS teknik analiz", "ASELS temettü"
+Toplu çağrının çözmediği, gerçekten bağımsız görevler:
+
+- Farklı **piyasalar** (ayrı `market` gerektirir): `get_quote(["ASELS"], "bist")` ·
+  `get_quote(["gram-altin"], "fx")` · `get_quote(["BTCTRY"], "crypto")`
+- Aynı şirketin **farklı veri türleri**: "ASELS finansalları", "ASELS teknik analiz", "ASELS KAP haberleri"
 - Farklı makro seriler: "TÜFE enflasyon", "10Y tahvil faizi"
 
 ## Sıralı Olması Gerekenler
 
 - Ticker bilinmiyor → `search_symbol` **sonra** veri çekimi
 - Veri topla → **sonra** hesapla / karşılaştır / sırala
-- Fiyat al + önceki dönem fiyatını al → **sonra** değişimi hesapla
-- Tarama presetinden emin değilsin → `get_screener_help` **sonra** `screen_securities`
+- Tarama presetinden emin değilsin → `screen_securities(help=true)` **sonra** taramayı çalıştır
 
 ## Örnek: Çok Adımlı Karşılaştırma
 
@@ -63,7 +80,7 @@ Görev 2'de bankalar 5'erli gruplar hâlinde paralel çağrılır (eşzamanlıl�
 ## Grafik / OHLC İstekleri
 
 - BIST → `get_historical_data(symbol, market="bist", period)` — OHLCV döner
-- Kripto → `get_crypto_market(symbol, exchange, data_type="ohlc")`
-- Döviz/emtia → `get_fx_data(symbol, data_type="historical")`
+- Kripto → `get_crypto_market(symbol, exchange, data_type="ohlc")` veya `get_historical_data(market="crypto")`
+- Döviz/altın/emtia → `get_historical_data(symbol="gram-altin", market="fx")`
 
 ❌ Sadece kapanış fiyatı mum grafik için yeterli değildir.
