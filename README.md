@@ -17,6 +17,7 @@ Borsacı, Borsa MCP sunucusunu kullanarak BIST hisseleri, TEFAS fonları, kripto
 - **Multi-Agent Architecture**: Görev planlama, yürütme, doğrulama ve yanıt sentezleme
 - **Paralel Görev Yürütme**: Dependency-aware parallelization ile 50-70% performans artışı
 - **Terminal Chart Visualization**: plotext ile renkli candlestick (mum) grafikleri
+- **Quant Alpha Backtest**: BIST OHLCV verisiyle trend/momentum/ICT sinyalleri, backtest metrikleri ve equity curve
 - **Conversation History**: Follow-up soru desteği ve konuşma bağlamı yönetimi
 - **Markdown Rendering**: Rich formatlanmış terminal çıktısı
 - **Auto-Update System**: GitHub commit-based otomatik güncelleme
@@ -246,6 +247,20 @@ uv run borsaci
 
 >> GARAN son 5 günlük fiyat grafiği
 ```
+
+**Quant Alpha / Backtest Sorguları:**
+```
+>> ASELS için alpha backtest yap ve grafiğini göster
+
+>> THYAO hissesinde ICT likidite süpürmesi ve fair value gap ile tahmin üret
+
+>> GARAN 5 yıllık algoritmik trading backtest sonuçlarını göster
+```
+
+Bu sorgularda BorsaCI mevcut `get_historical_data` OHLCV verisini kullanır ve lokal Python motoruyla
+long-only BIST varsayımı altında backtest üretir. Rapor; alpha getirisi, al-tut karşılaştırması,
+Sharpe, maksimum düşüş, yön tahmini isabeti, işlem sayısı ve terminal equity curve içerir.
+Örnek doğrulama sonuçları için: [docs/quant_alpha_backtest.md](docs/quant_alpha_backtest.md)
 
 **Follow-Up Sorular:**
 ```
