@@ -58,6 +58,17 @@ Borsacı'nın piyasa uzmanlığı, `skill/borsaci/` altında **saf markdown bir 
 paketlenmiştir. Kod, LLM sağlayıcısı veya API anahtarı gerektirmez — modelin kendisi (Claude Code,
 claude.ai veya skill + MCP destekleyen herhangi bir ajan) Borsa MCP araçlarını doğrudan kullanır.
 
+### En kolay yol: ajana kurdur
+
+Claude Code'a (veya benzer bir ajana) şunu söylemen yeterli:
+
+> Şu skill'i kur: https://github.com/saidsurucu/borsaci/tree/master/skill/borsaci
+> Gerekli MCP sunucusu: https://borsa.surucu.dev/mcp
+
+Ajan skill dosyalarını indirip `~/.claude/skills/borsaci/` altına yerleştirir ve MCP sunucusunu ekler.
+
+### Elle kurulum
+
 ```bash
 # 1. Borsa MCP'yi ekle (skill'in tek veri kaynağı)
 claude mcp add --transport http borsa https://borsa.surucu.dev/mcp
