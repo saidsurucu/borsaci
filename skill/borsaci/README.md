@@ -28,6 +28,10 @@ cp -r skill/borsaci ~/.claude/skills/
 
 ## Kullanım
 
+**Antigravity CLI / Windows:** Skill'i `.agents/skills/borsaci/` altına kopyalayın
+ve Borsa MCP'yi `.agents/mcp_config.json` içinde tanımlayın.
+[PowerShell ile kurulum ve doğrulama](../../docs/antigravity.md).
+
 Şu sorular skill'i tetikler:
 
 - "ASELS son fiyatı nedir?"

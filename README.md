@@ -90,6 +90,13 @@ gibi sorular skill'i tetikler.
 
 İkisi bağımsızdır ve senkron tutulmaz. Ayrıntılar: [`skill/borsaci/README.md`](skill/borsaci/README.md)
 
+### Antigravity CLI (Windows)
+
+Mevcut skill, Antigravity CLI'nin modeli ve MCP araçlarıyla da kullanılabilir.
+Python uygulamasını veya eski Gemini CLI OAuth oturumunu kurmak gerekmez.
+PowerShell adımları, MCP yapılandırma örneği ve bağlantı kontrolü için
+[Antigravity CLI kurulum rehberine](docs/antigravity.md) bakın.
+
 ## 🚀 Kurulum
 
 ### 🐳 Docker ile Kurulum (Önerilen)
