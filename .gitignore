@@ -67,3 +67,7 @@ dexter/
 
 # Claude Code documentation (AI assistant guidance)
 CLAUDE.md
+
+# Local Antigravity setup (canonical skill remains in skill/borsaci/)
+.agents/skills/borsaci/
+.agents/mcp_config.json

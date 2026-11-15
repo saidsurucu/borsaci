@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "borsa": {
+      "serverUrl": "https://borsa.surucu.dev/mcp"
+    }
+  }
+}
